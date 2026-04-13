@@ -1,0 +1,93 @@
+[project]
+name = "ai-news-review"
+version = "0.1.0"
+description = "A news review system based on AI(LLMs)."
+requires-python = ">=3.11"
+dependencies = [
+    "alembic>=1.18.4",
+    "asyncpg>=0.31.0",
+    "fastapi-users[sqlalchemy]>=15.0.5",
+    "fastapi[standard]>=0.135.3",
+    "pydantic-settings>=2.13.1",
+    "sqlalchemy>=2.0.49",
+]
+authors = [{ name = "vain-Liang", email = "qiviki@outlook.com" }]
+
+[dependency-groups]
+dev = [
+    { include-group = "lint" },
+    { include-group = "test" },
+]
+lint = [
+    "ruff>=0.15.0",
+    "ty>=0.0.29",
+]
+test = [
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+]
+
+# PyPi mirror
+[[tool.uv.index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = false
+
+[tool.uv.dependency-groups]
+lint = { requires-python = ">=3.11" }
+test = { requires-python = ">=3.11" }
+
+[tool.uv]
+required-version = ">=0.10.0"
+upgrade-package = ["ruff"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "F",
+    "E",
+    "W",
+    "I",
+    "C4",
+    "T100",
+    "FAST",
+    "UP",
+    "PYI",
+    "B",
+    "PLE",
+    "ARG001",
+    "SIM101",
+    "PTH",
+    "PGH004",
+    "TC",
+    "RSE",
+    "FURB",
+    "FA",
+    "RUF100",
+]
+ignore = [
+    "E501",
+    "F401",
+    "F841",
+]
+future-annotations = true
+
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+combine-as-imports = true
+
+[tool.ruff.lint.flake8-type-checking]
+runtime-evaluated-base-classes = ["pydantic.BaseModel", "sqlalchemy.orm.DeclarativeBase"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402"]
+"tests/**/*.py" = ["S101"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.fastapi]
+entrypoint = "app.main:app"
