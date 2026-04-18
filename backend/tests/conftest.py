@@ -9,8 +9,9 @@ from typing import TYPE_CHECKING
 import asyncpg
 import httpx
 import pytest
-from alembic import command
 from alembic.config import Config
+
+from alembic import command
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 SRC_DIR = BACKEND_DIR / "src"
@@ -47,6 +48,13 @@ def _run(coro):
     return asyncio.run(coro)
 
 
+@pytest.fixture(scope="session")
+def event_loop() -> Iterator[asyncio.AbstractEventLoop]:
+    loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
+
+
 def _quote_identifier(name: str) -> str:
     return '"' + name.replace('"', '""') + '"'
 
@@ -73,10 +81,10 @@ async def _reset_public_schema(database_dsn: str) -> None:
         await connection.close()
 
 
-async def _truncate_users_table(database_dsn: str) -> None:
+async def _truncate_auth_tables(database_dsn: str) -> None:
     connection = await asyncpg.connect(database_dsn)
     try:
-        await connection.execute("TRUNCATE TABLE users RESTART IDENTITY CASCADE")
+        await connection.execute('TRUNCATE TABLE access_token, "user" RESTART IDENTITY CASCADE')
     finally:
         await connection.close()
 
@@ -111,15 +119,16 @@ def configured_test_database() -> Iterator[None]:
 @pytest.fixture(autouse=True)
 def clean_users_table() -> Iterator[None]:
     settings = _get_cached_settings()
-    _run(_truncate_users_table(settings.build_postgres_dsn(driver="postgresql")))
+    _run(_truncate_auth_tables(settings.build_postgres_dsn(driver="postgresql")))
     yield
 
 
 @pytest.fixture(scope="session")
 def app() -> FastAPI:
-    from app.main import app as fastapi_app
+    from app.main import create_app
 
-    return fastapi_app
+    _clear_settings_cache()
+    return create_app()
 
 
 @pytest.fixture

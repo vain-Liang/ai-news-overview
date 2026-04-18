@@ -1,6 +1,5 @@
----
 // TODO: complete README
----
+
 
 # Introduction
 A news review system based AI(LLMs). Backend is built with LangChain, FastAPI, and frontend is built with React.
@@ -30,28 +29,115 @@ backend/
 ├─ pyproject.toml
 ├─ .env
 ├─ alembic.ini
-|
-├─ src/
-│  └─ app/
-│     ├─ main.py
-|     ├─ .env
-|     ├─ alembic/
-│     ├─ core/
-│     │  ├─ config.py
-│     │  └─ db.py
-│     ├─ models/
-│     │  ├─ base.py
-│     │  └─ user.py
-│     ├─ schemas/
-│     │  └─ user.py
-│     ├─ auth/
-│     │  ├─ backend.py
-│     │  ├─ manager.py
-│     │  └─ dependencies.py
-│     └─ api/
-│        ├─ router.py
-│        └─ me.py
+└─ src/
+   └─ app/
+      ├─ __init__.py
+      ├─ main.py
+      ├─ core/
+      │  ├─ __init__.py
+      │  ├─ config.py
+      │  ├─ logging.py
+      │  ├─ security.py
+      │  ├─ database.py
+      │  ├─ redis.py
+      │  ├─ exceptions.py
+      │  └─ lifespan.py
+      ├─ api/
+      │  ├─ __init__.py
+      │  ├─ deps.py
+      │  ├─ router.py
+      │  └─ v1/
+      │     ├─ __init__.py
+      │     ├─ auth.py
+      │     ├─ users.py
+      │     ├─ news.py
+      │     ├─ sources.py
+      │     ├─ crawl_tasks.py
+      │     ├─ summaries.py
+      │     └─ topics.py
+      ├─ schemas/              # Request-Response Pydantic Model
+      │  ├─ __init__.py
+      │  ├─ auth.py
+      │  ├─ user.py
+      │  ├─ news.py
+      │  ├─ source.py
+      │  ├─ summary.py
+      │  └─ common.py
+      ├─ models/               # Database entity
+      │  ├─ __init__.py
+      │  ├─ user.py
+      │  ├─ role.py
+      │  ├─ news.py
+      │  ├─ source.py
+      │  ├─ crawl_task.py
+      │  └─ summary.py
+      ├─ repositories/         # Data access, CRUD...
+      │  ├─ __init__.py
+      │  ├─ user.py
+      │  ├─ news.py
+      │  ├─ source.py
+      │  └─ summary.py
+      ├─ services/
+      │  ├─ __init__.py
+      │  ├─ auth_service.py
+      │  ├─ user_service.py
+      │  ├─ news_service.py
+      │  ├─ crawl_service.py
+      │  ├─ llm_service.py
+      │  ├─ summary_service.py
+      │  └─ topic_service.py
+      ├─ crawlers/
+      │  ├─ __init__.py
+      │  ├─ base.py
+      │  ├─ crawl4ai_client.py
+      │  ├─ parsers/
+      │  │  ├─ __init__.py
+      │  │  ├─ generic.py
+      │  │  └─ site_rules.py
+      │  └─ pipelines/
+      │     ├─ __init__.py
+      │     ├─ cleaner.py
+      │     ├─ deduplicator.py
+      │     └─ normalizer.py
+      ├─ llm/                # Model capability
+      │  ├─ __init__.py
+      │  ├─ client.py
+      │  ├─ prompts/
+      │  │  ├─ summary.py
+      │  │  ├─ classify.py
+      │  │  └─ extract.py
+      │  ├─ chains/
+      │  │  ├─ __init__.py
+      │  │  ├─ summary_chain.py
+      │  │  └─ topic_chain.py
+      │  └─ embeddings.py
+      ├─ tasks/            # Keep on hand. Advanced features, background tasks, scheduling
+      │  ├─ __init__.py
+      │  ├─ scheduler.py
+      │  ├─ crawl_jobs.py
+      │  └─ summary_jobs.py
+      ├─ db/
+      │  ├─ __init__.py
+      │  ├─ base.py
+      │  ├─ session.py
+      │  └─ init_db.py
+      ├─ utils/
+      └─ constants/
+
 frontend/
 ├─ README.md
 ├─ README-CN.md
 ```
+
+
+
+# Development
+- Use [`Conventional Commits Specification`](https://www.conventionalcommits.org/en/v1.0.0/) for commit messages.
+  - There are [a few tools](https://www.conventionalcommits.org/en/about/#tooling-for-conventional-commits) can refer to:
+    - [commitizen/cz-cli](https://github.com/commitizen/cz-cli)
+    - [commitlint](https://commitlint.js.org/guides/getting-started.html)
+    - [commitizen-tools/commitizen](https://commitizen-tools.github.io/commitizen/)
+    - and so on
+> [!NOTE]
+> This project use [![Static Badge](https://img.shields.io/badge/commitizen--tools-commitizen-brightgreen%3Flogo%3Dgithub)](https://commitizen-tools.github.io/commitizen/) to commit (use `uv tool install commitizen` to install easily).
+> You can use other conventional commits tools.

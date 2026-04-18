@@ -1,0 +1,14 @@
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "$version"
+version_scheme = "semver2"
+version = "0.0.10"
+gpg_sign = true
+update_changelog_on_bump = true
+major_version_zero = true
+version_files = [
+    "backend/pyproject.toml:version",
+    "frontend/package.json:version",
+]
+breaking_change_exclamation_in_title = true
+

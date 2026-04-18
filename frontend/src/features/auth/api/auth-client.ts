@@ -1,40 +1,84 @@
-import { request } from '../../../shared/api/http.ts'
-import type { AuthUser, LoginFormState, RegisterFormState } from '../model.ts'
+import { request } from "../../../shared/api/http.ts";
+import { normalizeOptionalText, sanitizeEmail } from "../lib/auth-utils.ts";
+import type {
+  AuthLoginMethod,
+  AuthUser,
+  LoginFormState,
+  RegisterPayload,
+  RuntimeStatus,
+} from "../model";
 
 type LoginResponse = {
-  access_token: string
-  token_type: 'bearer'
-}
+  access_token: string;
+  token_type: "bearer";
+};
 
-export const healthcheck = () => request<{ status: string }>('/healthz')
+export const healthcheck = () => request<{ status: string }>("/healthz");
 
-export const registerUser = (payload: RegisterFormState) =>
-  request<AuthUser>('/auth/register', {
-    method: 'POST',
+export const fetchRuntimeStatus = () =>
+  request<RuntimeStatus>("/system/runtime");
+
+export const registerUser = (payload: RegisterPayload) =>
+  request<AuthUser>("/auth/register", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
-  })
+    body: JSON.stringify({
+      ...payload,
+      email: sanitizeEmail(payload.email),
+      username: normalizeOptionalText(payload.username),
+      nickname: normalizeOptionalText(payload.nickname),
+    }),
+  });
 
-export const loginUser = async (payload: LoginFormState) => {
-  const body = new URLSearchParams({
-    username: payload.email,
+const buildLoginBody = (payload: LoginFormState) =>
+  new URLSearchParams({
+    username: sanitizeEmail(payload.email),
     password: payload.password,
-  })
+  });
 
-  return request<LoginResponse>('/auth/jwt/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body,
-  })
-}
+export const loginUser = async (
+  payload: LoginFormState,
+  method: AuthLoginMethod,
+) => {
+  const path =
+    method === "cookie" ? "/auth/cookie/login" : "/auth/jwt/login";
 
-export const fetchCurrentUser = (token: string) =>
-  request<AuthUser>('/users/me', {
+  const response = await request<LoginResponse | undefined>(path, {
+    method: "POST",
     headers: {
-      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/x-www-form-urlencoded",
     },
-  })
+    body: buildLoginBody(payload),
+    credentials: method === "cookie" ? "include" : undefined,
+  });
+
+  return response;
+};
+
+export const logoutUser = async (method: AuthLoginMethod, token?: string) => {
+  const path =
+    method === "cookie" ? "/auth/cookie/logout" : "/auth/jwt/logout";
+
+  return request<void>(path, {
+    method: "POST",
+    credentials: method === "cookie" ? "include" : undefined,
+    headers:
+      method === "jwt" && token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : undefined,
+  });
+};
+
+export const fetchCurrentUser = (token?: string) =>
+  request<AuthUser>("/users/me", {
+    credentials: token ? undefined : "include",
+    headers: token
+      ? {
+          Authorization: `Bearer ${token}`,
+        }
+      : undefined,
+  });

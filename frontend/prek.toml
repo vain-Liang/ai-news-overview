@@ -1,0 +1,8 @@
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "eslint"
+name = "ESLint"
+language = "system"
+entry = "pnpm run lint"

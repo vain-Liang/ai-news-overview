@@ -1,0 +1,7 @@
+[[repos]]
+repo = "https://github.com/commitizen-tools/commitizen"
+rev = "v4.13.9"
+
+[[repos.hooks]]
+id = "commitizen"
+stages = ["commit-msg"]

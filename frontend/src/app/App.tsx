@@ -1,5 +1,13 @@
-import { AuthPage } from '../features/auth/components/AuthPage'
+import { AppRouter } from "./router";
+import { AuthProvider } from "../features/auth/context/AuthProvider";
+import { ThemeProvider } from "../shared/theme/theme-provider";
 
-const App = () => <AuthPage />
+const App = () => (
+  <ThemeProvider>
+    <AuthProvider>
+      <AppRouter />
+    </AuthProvider>
+  </ThemeProvider>
+);
 
-export default App
+export default App;

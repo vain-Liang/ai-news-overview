@@ -2,26 +2,11 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.auth.backend import auth_backend
-from app.auth.fastapi_users import fastapi_users
-from app.schemas.user import UserCreate, UserRead, UserUpdate
+from app.api.v1.routes.auth import auth_router
+from app.api.v1.routes.system import system_router
+from app.api.v1.routes.users import users_router
 
 api_router = APIRouter()
-
-api_router.include_router(
-    fastapi_users.get_auth_router(auth_backend),
-    prefix="/auth/jwt",
-    tags=["auth"],
-)
-
-api_router.include_router(
-    fastapi_users.get_register_router(UserRead, UserCreate),
-    prefix="/auth",
-    tags=["auth"],
-)
-
-api_router.include_router(
-    fastapi_users.get_users_router(UserRead, UserUpdate),
-    prefix="/users",
-    tags=["users"],
-)
+api_router.include_router(system_router)
+api_router.include_router(auth_router)
+api_router.include_router(users_router)
