@@ -16,6 +16,10 @@ export type RuntimeStatus = {
   auth: {
     register_path: string;
     login_path: string;
+    forgot_password_path: string;
+    reset_password_path: string;
+    request_verify_path: string;
+    verify_path: string;
     me_path: string;
   };
 };

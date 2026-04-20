@@ -18,6 +18,49 @@ export const healthcheck = () => request<{ status: string }>("/healthz");
 export const fetchRuntimeStatus = () =>
   request<RuntimeStatus>("/system/runtime");
 
+export const requestPasswordReset = (email: string) =>
+  request<void>("/auth/forgot-password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: sanitizeEmail(email),
+    }),
+  });
+
+export const requestVerificationEmail = (email: string) =>
+  request<void>("/auth/request-verify-token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: sanitizeEmail(email),
+    }),
+  });
+
+export const confirmPasswordReset = (payload: {
+  token: string;
+  password: string;
+}) =>
+  request<void>("/auth/reset-password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+export const confirmAccountVerification = (token: string) =>
+  request<AuthUser>("/auth/verify", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ token }),
+  });
+
 export const registerUser = (payload: RegisterPayload) =>
   request<AuthUser>("/auth/register", {
     method: "POST",

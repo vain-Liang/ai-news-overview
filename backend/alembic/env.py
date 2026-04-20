@@ -1,21 +1,29 @@
 from __future__ import annotations
 
 from logging.config import fileConfig
+from pathlib import Path
 from typing import TYPE_CHECKING
 
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
-
-from alembic import context
-from app.core.config import get_settings
-from app.models.base import Base
 
 if TYPE_CHECKING:
     from sqlalchemy.engine import Connection
 
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+SRC_DIR = BACKEND_DIR / "src"
+import sys
+
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from app import models  # noqa: F401,E402
+from app.core.config import get_settings  # noqa: E402
+from app.models.base import Base  # noqa: E402
+
 config = context.config
 settings = get_settings()
-# for DATABASE_URL containing special characters must be escaped
 config.set_main_option("sqlalchemy.url", settings.get_database_url().replace("%", "%%"))
 
 if config.config_file_name is not None:

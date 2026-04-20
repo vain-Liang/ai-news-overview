@@ -9,6 +9,7 @@ from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[3]
+LlmProvider = Literal["deepseek", "openai"]
 
 
 class Settings(BaseSettings):
@@ -21,7 +22,39 @@ class Settings(BaseSettings):
     postgres_password: str = ""
     postgres_db: str = ""
 
+    chroma_persist_dir: str = "./data/chroma"
+    chroma_collection_name: str = "news_articles"
+
+    llm_provider: LlmProvider = "deepseek"
+
+    deepseek_api_key: str = ""
+    deepseek_base_url: str = "https://api.deepseek.com/v1"
+    deepseek_model: str = "deepseek-chat"
+    deepseek_temperature: float = Field(0.2, ge=0, le=2)
+    deepseek_max_completion_tokens: int = Field(1200, gt=0)
+
+    openai_api_key: str = ""
+    openai_base_url: str = "https://api.openai.com/v1"
+    openai_model: str = "gpt-4o-mini"
+    openai_temperature: float = Field(0.2, ge=0, le=2)
+    openai_max_completion_tokens: int = Field(1200, gt=0)
+
     auth_secret: str = ""
+    frontend_base_url: str = "http://127.0.0.1:5173"
+
+    mail_enabled: bool = False
+    mail_sender_email: str = "noreply@example.com"
+    mail_sender_name: str = "AI News Overview"
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_use_tls: bool = True
+    smtp_use_ssl: bool = False
+    smtp_validate_certs: bool = True
+    smtp_timeout_seconds: float = Field(10.0, gt=0)
+    email_rate_limit_times: int = Field(5, gt=0)
+    email_rate_limit_seconds: int = Field(60, gt=0)
 
     cookie_name: str = "fastapiusersauth"
     cookie_max_age: int | None = 3600
@@ -32,7 +65,6 @@ class Settings(BaseSettings):
     cookie_samesite: Literal["lax", "strict", "none"] = "lax"
 
     token_lifetime_seconds: int = Field(3600, gt=0)
-
     cors_origins: str = "http://127.0.0.1:5173,http://localhost:5173"
 
     model_config = SettingsConfigDict(
@@ -50,7 +82,14 @@ class Settings(BaseSettings):
             raise ValueError(f'cookie_samesite must be "lax", "strict", or "none", got "{v}"')
         return v
 
-    @field_validator("cookie_secure", "cookie_httponly")
+    @field_validator(
+        "cookie_secure",
+        "cookie_httponly",
+        "mail_enabled",
+        "smtp_use_tls",
+        "smtp_use_ssl",
+        "smtp_validate_certs",
+    )
     @classmethod
     def validate_bool_from_env(cls, v: str | bool) -> bool:
         """Handle boolean values from .env file."""
@@ -63,12 +102,19 @@ class Settings(BaseSettings):
     def validate_domain(cls, v: str | None) -> str | None:
         """Validate domain format if provided."""
         if v and v.strip():
-            # Basic domain validation
             v = v.strip().lower()
             if v.startswith(("http://", "https://")):
                 raise ValueError("cookie_domain should not include protocol")
             return v
         return None
+
+    @field_validator("frontend_base_url")
+    @classmethod
+    def validate_frontend_base_url(cls, value: str) -> str:
+        normalized = value.strip().rstrip("/")
+        if not normalized.startswith(("http://", "https://")):
+            raise ValueError("frontend_base_url must include protocol")
+        return normalized
 
     @field_validator("cookie_max_age", "token_lifetime_seconds")
     @classmethod
@@ -84,7 +130,6 @@ class Settings(BaseSettings):
         if self.debug:
             import warnings
 
-            # Security warnings for development
             if not self.auth_secret or len(self.auth_secret) < 10:
                 warnings.warn(
                     "Using weak AUTH_SECRET in debug mode. Consider using a stronger secret in production.",
@@ -97,12 +142,6 @@ class Settings(BaseSettings):
                     "cookie_secure=True in debug mode. Cookies will only be sent over HTTPS.", UserWarning, stacklevel=2
                 )
 
-            # Show current configuration
-            print("Debug mode enabled:")
-            print(f"  - Cookie secure: {self.cookie_secure}")
-            print(f"  - Cookie samesite: {self.cookie_samesite}")
-            print(f"  - Cookie HTTP only: {self.cookie_httponly}")
-
         return self
 
     @model_validator(mode="after")
@@ -111,7 +150,6 @@ class Settings(BaseSettings):
             msg = "AUTH_SECRET must be configured."
             raise ValueError(msg)
 
-        # PostgreSQL validation
         missing_fields = [
             field_name
             for field_name in (
@@ -127,7 +165,19 @@ class Settings(BaseSettings):
             msg = f"Missing required PostgreSQL settings: {missing}."
             raise ValueError(msg)
 
-        # Cookie-specific validations
+        if self.mail_enabled:
+            missing_mail_fields = [
+                field_name
+                for field_name in ("smtp_host", "mail_sender_email")
+                if not getattr(self, field_name)
+            ]
+            if missing_mail_fields:
+                missing = ", ".join(missing_mail_fields)
+                raise ValueError(f"Missing required mail settings: {missing}.")
+
+            if self.smtp_use_tls and self.smtp_use_ssl:
+                raise ValueError("smtp_use_tls and smtp_use_ssl cannot both be True.")
+
         if self.cookie_samesite == "none" and not self.cookie_secure:
             raise ValueError(
                 'cookie_secure must be True when cookie_samesite is "none". This is a browser security requirement.'
@@ -140,13 +190,11 @@ class Settings(BaseSettings):
             import warnings
 
             warnings.warn(
-                "cookie_secure=True in debug mode may prevent cookies from being set "
-                "when testing locally without HTTPS",
+                "cookie_secure=True in debug mode may prevent cookies from being set when testing locally without HTTPS",
                 UserWarning,
                 stacklevel=2,
             )
 
-        # Validate CORS origins
         if self.cors_origins:
             for origin in self.cors_origin_list:
                 if not origin.startswith(("http://", "https://")):

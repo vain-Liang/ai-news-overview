@@ -26,6 +26,10 @@ async def system_runtime() -> dict[str, object]:
             "register_path": "/auth/register",
             "login_path": "/auth/jwt/login and /auth/cookie/login",
             "api_auth_path": "/auth/jwt/login and /auth/jwt/logout",
+            "forgot_password_path": "/auth/forgot-password",
+            "reset_password_path": "/auth/reset-password",
+            "request_verify_path": "/auth/request-verify-token",
+            "verify_path": "/auth/verify",
             "me_path": "/users/me",
         },
     }

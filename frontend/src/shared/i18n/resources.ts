@@ -18,6 +18,34 @@ export const resources = {
         system: "System status",
         profile: "Profile",
       },
+      news: {
+        badge: "Homepage news",
+        title: "Latest stored headlines by source",
+        description:
+          "Browse the latest crawled homepage headlines grouped by source and open the original article directly from the title.",
+        refresh: "Refresh news",
+        loading: "Loading latest news…",
+        loadingDescription: "Reading stored news metadata from the backend.",
+        error: "Unable to load homepage news right now.",
+        empty: "No stored homepage news is available yet. Please ingest news first.",
+        emptySource: "No stored headlines for this source yet.",
+        sourceCount_one: "{{count}} source",
+        sourceCount_other: "{{count}} sources",
+        articleCount_one: "{{count}} headline",
+        articleCount_other: "{{count}} headlines",
+        groupCount_one: "{{count}} item",
+        groupCount_other: "{{count}} items",
+        groupDescription: "Click a headline to open the original article in a new tab.",
+        publishedAt: "Published",
+        crawledAt: "Crawled",
+        sources: {
+          xinhua: "Xinhua",
+          thepaper: "The Paper",
+          peoples: "People.cn",
+          ifeng: "ifeng",
+          qqnews: "Tencent News",
+        },
+      },
       theme: {
         label: "Theme",
         light: "Light",
@@ -108,6 +136,65 @@ export const resources = {
         loginSuccess: "Signed in successfully.",
         registerSuccess: "Account created and signed in.",
         invalidLogin: "Enter your email and password to sign in.",
+        forgotPasswordTitle: "Forgot your password?",
+        forgotPasswordDescription:
+          "Request a reset token for your account, then open the reset page with the token from your email or backend logs.",
+        forgotPasswordHint:
+          "Please check your email address or backend log after sending the reset token.",
+          forgotPasswordSuccess:
+          "If the account exists, password reset instructions have been generated.",
+        forgotPasswordFooter:
+          "Use the reset link from your email, or paste the token into the reset form below in local development.",
+        submitForgotPassword: "Send reset instructions",
+        submittingForgotPassword: "Sending reset instructions…",
+        verifyAccountTitle: "Confirm your email address",
+        verifyAccountDescription:
+          "Open this page from the confirmation email and we will verify your account automatically.",
+        verifyAccountFooter:
+          "If automatic verification does not start, paste the token manually and try again.",
+        verifyingAccount: "Verifying your account…",
+        verifyAccountSuccess: "Account confirmed for {{email}}.",
+        verifyAccountError: "Unable to confirm this account.",
+        verifyAccountToken: "Confirmation token",
+        verifyAccountTokenPlaceholder: "Paste the confirmation token",
+        submitVerifyAccount: "Confirm account",
+        resendVerificationTitle: "Resend confirmation email",
+        resendVerificationDescription:
+          "Request a fresh account confirmation link for your email address.",
+        resendVerificationHint:
+          "If the account exists and is not verified yet, a new confirmation email will be sent.",
+        resendVerificationFooter:
+          "In development, the backend log also prints the confirmation link.",
+        resendVerificationSuccess:
+          "If the account exists and still needs confirmation, a new email has been sent.",
+        resendVerificationError: "Unable to resend the confirmation email.",
+        submitResendVerification: "Resend confirmation email",
+        submittingResendVerification: "Resending confirmation email…",
+        switchToResendVerification: "Resend confirmation email",
+        unverifiedBannerBadge: "Email verification required",
+        unverifiedBannerTitle: "Your account email is not verified yet.",
+        unverifiedBannerDescription:
+          "Please verify {{email}} to complete account setup and avoid missing password reset and account recovery messages.",
+        goToVerifyAccount: "Verify account",
+        openResendVerificationPage: "Open resend page",
+        verifyAccountResendHint:
+          "Need a new confirmation email for {{email}}? Use the resend verification page.",
+        resetPasswordTitle: "Set a new password",
+        resetPasswordDescription:
+          "Paste the reset token you received and choose a new password.",
+        resetPasswordHint:
+          "You can open this page with ?token=... and the token field will be filled automatically.",
+        resetPasswordFooter:
+          "After resetting the password, sign in again with the new credentials.",
+        resetPasswordToken: "Reset token",
+        resetPasswordTokenPlaceholder: "Paste the token from the reset link",
+        resetPasswordTokenRequired: "Enter the reset token to continue.",
+        newPassword: "New password",
+        submitResetPassword: "Reset password",
+        submittingResetPassword: "Resetting password…",
+        resetPasswordSuccess: "Password updated successfully. Please sign in again.",
+        switchToForgotPassword: "Forgot your password?",
+        backToLogin: "Back to login",
         createInstead: "Need an account?",
         loginInstead: "Already have an account?",
         switchToRegister: "Go to register",
@@ -158,6 +245,30 @@ export const resources = {
         logout: "退出登录",
         system: "后端状态",
         profile: "用户信息",
+      },
+      news: {
+        badge: "首页新闻",
+        title: "按来源展示的最新入库新闻",
+        description: "按来源查看最近抓取并入库的首页新闻标题，点击标题即可直接打开新闻原文。",
+        refresh: "刷新新闻",
+        loading: "正在加载最新新闻…",
+        loadingDescription: "正在从后端读取已保存的新闻元数据。",
+        error: "暂时无法加载首页新闻。",
+        empty: "当前还没有已入库的首页新闻，请先执行新闻抓取。",
+        emptySource: "该来源暂时没有已保存的新闻标题。",
+        sourceCount: "{{count}} 个来源",
+        articleCount: "{{count}} 条标题",
+        groupCount: "{{count}} 条",
+        groupDescription: "点击标题可在新标签页中打开新闻原文。",
+        publishedAt: "发布时间",
+        crawledAt: "抓取时间",
+        sources: {
+          xinhua: "新华社",
+          thepaper: "澎湃新闻",
+          peoples: "人民网",
+          ifeng: "凤凰网",
+          qqnews: "腾讯新闻",
+        },
       },
       theme: {
         label: "主题",
@@ -245,6 +356,65 @@ export const resources = {
         loginSuccess: "登录成功。",
         registerSuccess: "账号创建成功并已登录。",
         invalidLogin: "请输入邮箱和密码后再登录。",
+        forgotPasswordTitle: "忘记密码？",
+        forgotPasswordDescription:
+          "先为账户申请重置令牌，然后使用邮件中的链接或本地开发时后端日志里的链接完成密码重置。",
+        forgotPasswordHint:
+          "重置令牌发送后，请检查邮箱或后端日志。",
+        forgotPasswordSuccess:
+          "如果该账户存在，系统已经生成密码重置说明。",
+        forgotPasswordFooter:
+          "请使用邮件中的重置链接；本地开发时也可以把令牌直接粘贴到重置表单中。",
+        submitForgotPassword: "发送重置说明",
+        submittingForgotPassword: "发送中…",
+        verifyAccountTitle: "确认邮箱账号",
+        verifyAccountDescription:
+          "通过确认邮件打开此页面后，系统会自动完成账号确认。",
+        verifyAccountFooter:
+          "如果没有自动确认，请手动粘贴确认令牌再试一次。",
+        verifyingAccount: "正在确认账号…",
+        verifyAccountSuccess: "账号 {{email}} 已确认成功。",
+        verifyAccountError: "无法确认该账号。",
+        verifyAccountToken: "确认令牌",
+        verifyAccountTokenPlaceholder: "粘贴确认令牌",
+        submitVerifyAccount: "确认账号",
+        resendVerificationTitle: "重新发送确认邮件",
+        resendVerificationDescription:
+          "为你的邮箱重新申请一封新的账号确认邮件。",
+        resendVerificationHint:
+          "如果该账户存在且尚未确认，系统会重新发送确认邮件。",
+        resendVerificationFooter:
+          "开发模式下，后端日志也会输出确认链接。",
+        resendVerificationSuccess:
+          "如果该账户存在且仍需确认，新的确认邮件已经发送。",
+        resendVerificationError: "无法重新发送确认邮件。",
+        submitResendVerification: "重新发送确认邮件",
+        submittingResendVerification: "重新发送中…",
+        switchToResendVerification: "重新发送确认邮件",
+        unverifiedBannerBadge: "邮箱尚未验证",
+        unverifiedBannerTitle: "你的账号邮箱还没有完成验证。",
+        unverifiedBannerDescription:
+          "请尽快验证 {{email}}，以完成账户初始化，并避免错过密码重置或账户恢复相关邮件。",
+        goToVerifyAccount: "立即验证账号",
+        openResendVerificationPage: "打开重发页面",
+        verifyAccountResendHint:
+          "如果需要为 {{email}} 重新发送确认邮件，请使用重发确认邮件页面。",
+        resetPasswordTitle: "设置新密码",
+        resetPasswordDescription:
+          "粘贴你收到的重置令牌，并设置新的登录密码。",
+        resetPasswordHint:
+          "你可以通过 ?token=... 打开本页，系统会自动填入重置令牌。",
+        resetPasswordFooter:
+          "密码重置完成后，请使用新密码重新登录。",
+        resetPasswordToken: "重置令牌",
+        resetPasswordTokenPlaceholder: "粘贴重置链接中的令牌",
+        resetPasswordTokenRequired: "请输入重置令牌后继续。",
+        newPassword: "新密码",
+        submitResetPassword: "重置密码",
+        submittingResetPassword: "重置中…",
+        resetPasswordSuccess: "密码已更新，请重新登录。",
+        switchToForgotPassword: "忘记密码？",
+        backToLogin: "返回登录",
         createInstead: "还没有账号？",
         loginInstead: "已经有账号了？",
         switchToRegister: "前往注册",

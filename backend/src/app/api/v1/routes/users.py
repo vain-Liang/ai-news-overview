@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
+from app.auth.fastapi_users import fastapi_users
 from app.schemas.user import UserRead, UserUpdate
-from app.services.auth.fastapi_users import fastapi_users
 
 users_router = APIRouter(tags=["users"])
 

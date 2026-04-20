@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../features/auth/hooks/useAuth";
 import { RuntimeStatusCard } from "../features/system/components/RuntimeStatusCard";
 import { UserProfileCard } from "../features/auth/components/UserProfileCard";
+import { VerificationReminderBanner } from "../features/auth/components/VerificationReminderBanner";
+import { HomepageNewsSection } from "../features/news/components/HomepageNewsSection";
 import { getSessionLabel } from "../features/auth/lib/auth-utils";
 import { Badge } from "../shared/ui/badge";
 import { Button } from "../shared/ui/button";
@@ -63,6 +65,10 @@ export const HomePage = () => {
           </div>
         </header>
 
+        {isAuthenticated && user && !user.is_verified ? (
+          <VerificationReminderBanner email={user.email} />
+        ) : null}
+
         <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
           <Card className="overflow-hidden border-primary/10 bg-gradient-to-br from-primary/8 via-background to-background">
             <CardHeader className="space-y-4">
@@ -116,6 +122,8 @@ export const HomePage = () => {
 
           <RuntimeStatusCard backendState={backendState} />
         </section>
+
+        <HomepageNewsSection />
 
         <UserProfileCard
           authMethod={authMethod}

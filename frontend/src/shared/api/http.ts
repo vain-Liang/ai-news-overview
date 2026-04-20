@@ -64,5 +64,15 @@ export const request = async <T>(
     return undefined as T;
   }
 
-  return (await response.json()) as T;
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    return undefined as T;
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return undefined as T;
+  }
+
+  return JSON.parse(text) as T;
 };

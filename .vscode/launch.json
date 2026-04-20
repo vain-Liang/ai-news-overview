@@ -1,0 +1,69 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend: FastAPI (uv)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "fastapi",
+      "args": [
+        "dev",
+        "src/app/main.py",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8000"
+      ],
+      "cwd": "${workspaceFolder}/backend",
+      "justMyCode": true,
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/backend"
+      },
+      "serverReadyAction": {
+        "pattern": ".*(http://127\\.0\\.0\\.1:8000|http://localhost:8000).*",
+        "uriFormat": "%s/docs",
+        "action": "openExternally"
+      }
+    },
+    {
+      "name": "Frontend: Vite dev server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm dev --host 127.0.0.1 --port 5173",
+      "cwd": "${workspaceFolder}/frontend"
+    },
+    {
+      "name": "Frontend: Chrome",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://127.0.0.1:5173",
+      "webRoot": "${workspaceFolder}/frontend"
+    },
+    {
+      "name": "Frontend: Attach Chrome",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9222,
+      "webRoot": "${workspaceFolder}/frontend"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack: debug",
+      "configurations": [
+        "Backend: FastAPI (uv)",
+        "Frontend: Vite dev server"
+      ],
+      "stopAll": true
+    },
+    {
+      "name": "Full Stack: backend + chrome",
+      "configurations": [
+        "Backend: FastAPI (uv)",
+        "Frontend: Chrome"
+      ],
+      "stopAll": true
+    }
+  ]
+}

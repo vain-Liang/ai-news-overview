@@ -187,6 +187,18 @@ export const LoginForm = () => {
       </Button>
 
       <div className="text-sm text-muted-foreground">
+        <Link className="font-medium text-primary hover:underline" to="/forgot-password">
+          {t("auth.switchToForgotPassword")}
+        </Link>
+      </div>
+
+      <div className="text-sm text-muted-foreground">
+        <Link className="font-medium text-primary hover:underline" to="/resend-verification">
+          {t("auth.switchToResendVerification")}
+        </Link>
+      </div>
+
+      <div className="text-sm text-muted-foreground">
         {t("auth.createInstead")}{" "}
         <Link className="font-medium text-primary hover:underline" to="/register">
           {t("auth.switchToRegister")}
