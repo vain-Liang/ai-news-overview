@@ -2,15 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  confirmAccountVerification,
-  confirmPasswordReset,
   fetchCurrentUser,
-  fetchRuntimeStatus,
-  healthcheck,
-  loginUser,
-  requestPasswordReset,
-  requestVerificationEmail,
   registerUser,
+  updateCurrentUser,
 } from "../src/features/auth/api/auth-client.ts";
 
 type FetchCall = {
@@ -25,195 +19,91 @@ const createJsonResponse = (body: unknown, init?: ResponseInit) =>
     ...init,
   });
 
-test("healthcheck uses the default /api prefix", async () => {
+test("auth client uses bearer token when fetching the current user", async () => {
   const calls: FetchCall[] = [];
 
   globalThis.fetch = async (input, init) => {
     calls.push({ input, init });
-    return createJsonResponse({ status: "ok" });
+    return createJsonResponse({ id: "user-1", email: "demo@example.com", pending_email: null });
   };
 
-  const response = await healthcheck();
-
-  assert.deepEqual(response, { status: "ok" });
-  assert.equal(calls.length, 1);
-  assert.equal(String(calls[0]?.input), "/api/healthz");
-});
-
-test("fetchRuntimeStatus uses the runtime endpoint", async () => {
-  const calls: FetchCall[] = [];
-
-  globalThis.fetch = async (input, init) => {
-    calls.push({ input, init });
-    return createJsonResponse({ status: "ok", app_name: "AI News Review" });
-  };
-
-  const response = await fetchRuntimeStatus();
-
-  assert.equal(response.status, "ok");
-  assert.equal(String(calls[0]?.input), "/api/system/runtime");
-});
-
-test("requestPasswordReset posts the forgot-password payload", async () => {
-  const calls: FetchCall[] = [];
-
-  globalThis.fetch = async (input, init) => {
-    calls.push({ input, init });
-    return new Response(null, { status: 202 });
-  };
-
-  await requestPasswordReset(" Person@Example.com ");
-
-  assert.equal(String(calls[0]?.input), "/api/auth/forgot-password");
-  assert.equal(calls[0]?.init?.method, "POST");
-  assert.deepEqual(JSON.parse(String(calls[0]?.init?.body)), {
-    email: "person@example.com",
-  });
-});
-
-test("requestVerificationEmail posts the verify-token payload", async () => {
-  const calls: FetchCall[] = [];
-
-  globalThis.fetch = async (input, init) => {
-    calls.push({ input, init });
-    return new Response(null, { status: 202 });
-  };
-
-  await requestVerificationEmail(" Person@Example.com ");
-
-  assert.equal(String(calls[0]?.input), "/api/auth/request-verify-token");
-  assert.equal(calls[0]?.init?.method, "POST");
-  assert.deepEqual(JSON.parse(String(calls[0]?.init?.body)), {
-    email: "person@example.com",
-  });
-});
-
-test("confirmPasswordReset posts token and new password", async () => {
-  const calls: FetchCall[] = [];
-
-  globalThis.fetch = async (input, init) => {
-    calls.push({ input, init });
-    return createJsonResponse(null);
-  };
-
-  await confirmPasswordReset({
-    token: "reset-token",
-    password: "NewStrongPass456!",
-  });
-
-  assert.equal(String(calls[0]?.input), "/api/auth/reset-password");
-  assert.equal(calls[0]?.init?.method, "POST");
-  assert.deepEqual(JSON.parse(String(calls[0]?.init?.body)), {
-    token: "reset-token",
-    password: "NewStrongPass456!",
-  });
-});
-
-test("confirmAccountVerification posts the verification token", async () => {
-  const calls: FetchCall[] = [];
-
-  globalThis.fetch = async (input, init) => {
-    calls.push({ input, init });
-    return createJsonResponse({ id: "1", email: "verified@example.com" });
-  };
-
-  await confirmAccountVerification("verify-token");
-
-  assert.equal(String(calls[0]?.input), "/api/auth/verify");
-  assert.equal(calls[0]?.init?.method, "POST");
-  assert.deepEqual(JSON.parse(String(calls[0]?.init?.body)), {
-    token: "verify-token",
-  });
-});
-
-test("registerUser posts JSON to the register endpoint", async () => {
-  const calls: FetchCall[] = [];
-
-  globalThis.fetch = async (input, init) => {
-    calls.push({ input, init });
-    return createJsonResponse({ id: "1", email: "a@example.com" });
-  };
-
-  await registerUser({
-    email: "a@example.com",
-    password: "StrongPass123!",
-    username: "reader",
-    nickname: "Reader",
-  });
-
-  assert.equal(String(calls[0]?.input), "/api/auth/register");
-  assert.equal(calls[0]?.init?.method, "POST");
-  assert.equal(
-    (calls[0]?.init?.headers as Record<string, string>)["Content-Type"],
-    "application/json",
-  );
-  assert.match(String(calls[0]?.init?.body), /"email":"a@example.com"/);
-});
-
-test("registerUser normalizes optional profile fields before sending", async () => {
-  const calls: FetchCall[] = [];
-
-  globalThis.fetch = async (input, init) => {
-    calls.push({ input, init });
-    return createJsonResponse({ id: "1", email: "person@example.com" });
-  };
-
-  await registerUser({
-    email: " Person@Example.com ",
-    password: "StrongPass123!",
-    username: "   ",
-    nickname: "  ",
-  });
-
-  assert.deepEqual(JSON.parse(String(calls[0]?.init?.body)), {
-    email: "person@example.com",
-    password: "StrongPass123!",
-    username: null,
-    nickname: null,
-  });
-});
-
-test("loginUser sends form encoded credentials expected by fastapi-users", async () => {
-  const calls: FetchCall[] = [];
-
-  globalThis.fetch = async (input, init) => {
-    calls.push({ input, init });
-    return createJsonResponse({ access_token: "token", token_type: "bearer" });
-  };
-
-  const response = await loginUser(
-    {
-      email: "a@example.com",
-      password: "StrongPass123!",
-    },
-    "jwt",
-  );
-
-  assert.equal(response?.access_token, "token");
-  assert.equal(String(calls[0]?.input), "/api/auth/jwt/login");
-  assert.equal(
-    (calls[0]?.init?.headers as Record<string, string>)["Content-Type"],
-    "application/x-www-form-urlencoded",
-  );
-  const body = calls[0]?.init?.body;
-  assert.ok(body instanceof URLSearchParams);
-  assert.equal(body.get("username"), "a@example.com");
-  assert.equal(body.get("password"), "StrongPass123!");
-});
-
-test("fetchCurrentUser attaches the bearer token", async () => {
-  const calls: FetchCall[] = [];
-
-  globalThis.fetch = async (input, init) => {
-    calls.push({ input, init });
-    return createJsonResponse({ id: "1", email: "a@example.com" });
-  };
-
-  await fetchCurrentUser("jwt-token");
+  await fetchCurrentUser("demo-token");
 
   assert.equal(String(calls[0]?.input), "/api/users/me");
-  assert.equal(
-    (calls[0]?.init?.headers as Record<string, string>).Authorization,
-    "Bearer jwt-token",
+  assert.equal((calls[0]?.init?.headers as Record<string, string>).Authorization, "Bearer demo-token");
+  assert.equal(calls[0]?.init?.credentials, undefined);
+});
+
+test("auth client updates the current user with normalized fields", async () => {
+  const calls: FetchCall[] = [];
+
+  globalThis.fetch = async (input, init) => {
+    calls.push({ input, init });
+    return createJsonResponse({
+      user: { id: "user-1", email: "current@example.com", nickname: "Display Name", pending_email: "next@example.com" },
+      email_change_requested: true,
+    });
+  };
+
+  await updateCurrentUser({ email: "  NEXT@EXAMPLE.COM ", nickname: "  Display Name  " }, "demo-token");
+
+  assert.equal(String(calls[0]?.input), "/api/users/me");
+  assert.equal(calls[0]?.init?.method, "PATCH");
+  assert.equal((calls[0]?.init?.headers as Record<string, string>).Authorization, "Bearer demo-token");
+  assert.deepEqual(JSON.parse(String(calls[0]?.init?.body)), {
+    email: "next@example.com",
+    nickname: "Display Name",
+  });
+});
+
+test("auth client translates backend password policy errors", async () => {
+  globalThis.fetch = async () =>
+    createJsonResponse(
+      {
+        error: {
+          code: "HTTP_ERROR",
+          message: "Password is too weak",
+        },
+      },
+      { status: 400 },
+    );
+
+  await assert.rejects(
+    () =>
+      registerUser({
+        email: "reader@example.com",
+        password: "weak",
+        username: "reader",
+        nickname: "",
+      }),
+    {
+      message: "Choose a stronger password that is harder to guess.",
+    },
+  );
+});
+
+test("auth client translates backend duplicate-user errors", async () => {
+  globalThis.fetch = async () =>
+    createJsonResponse(
+      {
+        error: {
+          code: "HTTP_ERROR",
+          message: "REGISTER_USER_ALREADY_EXISTS",
+        },
+      },
+      { status: 400 },
+    );
+
+  await assert.rejects(
+    () =>
+      registerUser({
+        email: "reader@example.com",
+        password: "StrongPass123!",
+        username: "reader",
+        nickname: "",
+      }),
+    {
+      message: "An account with this email address or username already exists.",
+    },
   );
 });

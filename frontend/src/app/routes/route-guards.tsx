@@ -36,3 +36,21 @@ export const ProtectedAuthRoute = ({ children }: PropsWithChildren) => {
 
   return children;
 };
+
+export const SuperuserRoute = ({ children }: PropsWithChildren) => {
+  const { isAuthenticated, isBootstrapping, user } = useAuth();
+
+  if (isBootstrapping) {
+    return <FullScreenLoader />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!user?.is_superuser) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};

@@ -22,6 +22,10 @@ async def system_runtime() -> dict[str, object]:
         "app_name": settings.app_name,
         "debug": settings.debug,
         "server_time": datetime.now(UTC).isoformat(),
+        "admin": {
+            "api_prefix": settings.admin_api_entry,
+            "ui_path": "/admin",
+        },
         "auth": {
             "register_path": "/auth/register",
             "login_path": "/auth/jwt/login and /auth/cookie/login",

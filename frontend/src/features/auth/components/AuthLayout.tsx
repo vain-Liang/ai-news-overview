@@ -11,7 +11,7 @@ type AuthLayoutProps = PropsWithChildren<{
   eyebrow: string;
   title: string;
   description: string;
-  footer: ReactNode;
+  footer?: ReactNode;
 }>;
 
 export const AuthLayout = ({
@@ -37,27 +37,24 @@ export const AuthLayout = ({
           </div>
         </header>
 
-        <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <Card className="overflow-hidden border-primary/10 bg-gradient-to-br from-primary/5 via-background to-background">
+        <section className="mx-auto flex w-full max-w-xl">
+          <Card className="w-full">
             <CardHeader className="space-y-4">
               <Badge className="w-fit" variant="default">
                 {eyebrow}
               </Badge>
-              <CardTitle className="max-w-2xl text-3xl sm:text-4xl">{title}</CardTitle>
-              <CardDescription className="max-w-2xl text-base">{description}</CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>{title}</CardTitle>
-              <CardDescription>{description}</CardDescription>
+              <div className="space-y-2">
+                <CardTitle className="text-3xl sm:text-4xl">{title}</CardTitle>
+                <CardDescription className="text-base">{description}</CardDescription>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">{children}</CardContent>
           </Card>
         </section>
 
-        <div>{footer}</div>
+        {footer ? (
+          <div className="mx-auto w-full max-w-xl text-center">{footer}</div>
+        ) : null}
       </div>
     </main>
   );

@@ -10,11 +10,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[3]
 LlmProvider = Literal["deepseek", "openai"]
+LogFormat = Literal["text", "json"]
 
 
 class Settings(BaseSettings):
     app_name: str = "AI News Overview"
     debug: bool = True
+    log_level: str = "INFO"
+    log_format: LogFormat = "text"
 
     postgres_host: str = ""
     postgres_port: int = 5432
@@ -41,6 +44,7 @@ class Settings(BaseSettings):
 
     auth_secret: str = ""
     frontend_base_url: str = "http://127.0.0.1:5173"
+    admin_api_prefix: str = "/admin/"
 
     mail_enabled: bool = False
     mail_sender_email: str = "noreply@example.com"
@@ -66,6 +70,12 @@ class Settings(BaseSettings):
 
     token_lifetime_seconds: int = Field(3600, gt=0)
     cors_origins: str = "http://127.0.0.1:5173,http://localhost:5173"
+
+    celery_broker_url: str = "amqp://guest:guest@localhost:5672//"
+    celery_result_backend: str = "redis://localhost:6379/0"
+    redis_url: str = "redis://localhost:6379/0"
+    pipeline_daily_limit: int = Field(2, gt=0)
+    pipeline_min_interval_seconds: int = Field(3600, gt=0)
 
     model_config = SettingsConfigDict(
         env_file=BACKEND_DIR / ".env",
@@ -114,6 +124,14 @@ class Settings(BaseSettings):
         normalized = value.strip().rstrip("/")
         if not normalized.startswith(("http://", "https://")):
             raise ValueError("frontend_base_url must include protocol")
+        return normalized
+
+    @field_validator("admin_api_prefix")
+    @classmethod
+    def validate_admin_api_prefix(cls, value: str) -> str:
+        normalized = "/" + "/".join(segment for segment in value.strip().split("/") if segment)
+        if normalized == "/":
+            raise ValueError("admin_api_prefix must include at least one path segment")
         return normalized
 
     @field_validator("cookie_max_age", "token_lifetime_seconds")
@@ -201,6 +219,14 @@ class Settings(BaseSettings):
                     raise ValueError(f"CORS origin must include protocol: {origin}")
 
         return self
+
+    @property
+    def admin_api_prefix_path(self) -> str:
+        return self.admin_api_prefix
+
+    @property
+    def admin_api_entry(self) -> str:
+        return f"{self.admin_api_prefix_path}/"
 
     @property
     def cors_origin_list(self) -> list[str]:

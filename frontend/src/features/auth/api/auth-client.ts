@@ -1,17 +1,13 @@
 import { request } from "../../../shared/api/http.ts";
 import { normalizeOptionalText, sanitizeEmail } from "../lib/auth-utils.ts";
 import type {
-  AuthLoginMethod,
   AuthUser,
   LoginFormState,
+  ProfileUpdatePayload,
+  ProfileUpdateResponse,
   RegisterPayload,
   RuntimeStatus,
 } from "../model";
-
-type LoginResponse = {
-  access_token: string;
-  token_type: "bearer";
-};
 
 export const healthcheck = () => request<{ status: string }>("/healthz");
 
@@ -75,53 +71,37 @@ export const registerUser = (payload: RegisterPayload) =>
     }),
   });
 
-const buildLoginBody = (payload: LoginFormState) =>
-  new URLSearchParams({
-    username: sanitizeEmail(payload.email),
-    password: payload.password,
-  });
-
-export const loginUser = async (
-  payload: LoginFormState,
-  method: AuthLoginMethod,
-) => {
-  const path =
-    method === "cookie" ? "/auth/cookie/login" : "/auth/jwt/login";
-
-  const response = await request<LoginResponse | undefined>(path, {
+export const loginUser = (payload: LoginFormState) =>
+  request<void>("/auth/cookie/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: buildLoginBody(payload),
-    credentials: method === "cookie" ? "include" : undefined,
+    body: new URLSearchParams({
+      username: sanitizeEmail(payload.email),
+      password: payload.password,
+    }),
+    credentials: "include",
   });
 
-  return response;
-};
-
-export const logoutUser = async (method: AuthLoginMethod, token?: string) => {
-  const path =
-    method === "cookie" ? "/auth/cookie/logout" : "/auth/jwt/logout";
-
-  return request<void>(path, {
+export const logoutUser = () =>
+  request<void>("/auth/cookie/logout", {
     method: "POST",
-    credentials: method === "cookie" ? "include" : undefined,
-    headers:
-      method === "jwt" && token
-        ? {
-            Authorization: `Bearer ${token}`,
-          }
-        : undefined,
+    credentials: "include",
   });
-};
 
-export const fetchCurrentUser = (token?: string) =>
-  request<AuthUser>("/users/me", {
-    credentials: token ? undefined : "include",
-    headers: token
-      ? {
-          Authorization: `Bearer ${token}`,
-        }
-      : undefined,
+export const fetchCurrentUser = () =>
+  request<AuthUser>("/users/me", { credentials: "include" });
+
+export const updateCurrentUser = (payload: ProfileUpdatePayload) =>
+  request<ProfileUpdateResponse>("/users/me", {
+    method: "PATCH",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: sanitizeEmail(payload.email),
+      nickname: normalizeOptionalText(payload.nickname),
+    }),
   });

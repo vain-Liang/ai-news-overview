@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 from types import MethodType
 from typing import TYPE_CHECKING, Any, cast
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
@@ -28,6 +29,8 @@ async def test_system_runtime(client: AsyncClient) -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["status"] == "ok"
+    assert payload["admin"]["api_prefix"] == "/admin/"
+    assert payload["admin"]["ui_path"] == "/admin"
     assert payload["auth"]["register_path"] == "/auth/register"
     assert "/auth/jwt/login" in payload["auth"]["login_path"]
     assert "/auth/cookie/login" in payload["auth"]["login_path"]
@@ -74,6 +77,117 @@ async def test_register_login_and_get_current_user(client: AsyncClient) -> None:
     assert payload["email"] == email
     assert payload["nickname"] == "Demo User"
 
+    update_response = await client.patch(
+        "/users/me",
+        json={
+            "email": f"updated-{uuid.uuid4().hex[:8]}@example.com",
+            "nickname": "Updated Demo",
+        },
+        headers={
+            "Authorization": f"Bearer {login_payload['access_token']}",
+            "Content-Type": "application/json",
+        },
+    )
+    assert update_response.status_code == 200
+    update_payload = update_response.json()
+    assert update_payload["email_change_requested"] is True
+    assert update_payload["user"]["nickname"] == "Updated Demo"
+    assert update_payload["user"]["email"] == email
+    assert update_payload["user"]["pending_email"].startswith("updated-")
+
+
+@pytest.mark.asyncio
+async def test_email_change_requires_verification_before_it_is_applied(
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sent_messages: list[dict[str, str]] = []
+
+    async def fake_send_email_message(*, to_email: str, subject: str, text_body: str, html_body: str | None = None) -> bool:
+        sent_messages.append(
+            {
+                "to_email": to_email,
+                "subject": subject,
+                "text_body": text_body,
+                "html_body": html_body or "",
+            }
+        )
+        return True
+
+    monkeypatch.setattr("app.auth.manager.send_email_message", fake_send_email_message)
+
+    email = f"change-{uuid.uuid4().hex[:8]}@example.com"
+    next_email = f"pending-{uuid.uuid4().hex[:8]}@example.com"
+    password = "StrongPass123!"
+
+    register_response = await client.post(
+        "/auth/register",
+        json={
+            "email": email,
+            "password": password,
+            "username": f"change-user-{uuid.uuid4().hex[:6]}",
+            "nickname": "Original Nickname",
+        },
+    )
+    assert register_response.status_code == 201
+
+    login_response = await client.post(
+        "/auth/jwt/login",
+        data={"username": email, "password": password},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    assert login_response.status_code == 200
+    access_token = login_response.json()["access_token"]
+
+    sent_messages.clear()
+    update_response = await client.patch(
+        "/users/me",
+        json={"email": next_email, "nickname": "Verified Later"},
+        headers={
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+        },
+    )
+
+    assert update_response.status_code == 200
+    update_payload = update_response.json()
+    assert update_payload["email_change_requested"] is True
+    assert update_payload["user"]["email"] == email
+    assert update_payload["user"]["pending_email"] == next_email
+    assert update_payload["user"]["nickname"] == "Verified Later"
+    assert sent_messages
+    assert sent_messages[0]["to_email"] == next_email
+    assert sent_messages[0]["subject"] == "Confirm your new email address"
+    assert "mode=email-change" in sent_messages[0]["text_body"]
+
+    verify_link = sent_messages[0]["text_body"].splitlines()[2].split(": ", 1)[1]
+    verify_token = parse_qs(urlparse(verify_link).query)["token"][0]
+
+    me_before_verify = await client.get(
+        "/users/me",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert me_before_verify.status_code == 200
+    assert me_before_verify.json()["email"] == email
+    assert me_before_verify.json()["pending_email"] == next_email
+
+    verify_response = await client.post(
+        "/auth/verify",
+        json={"token": verify_token},
+    )
+    assert verify_response.status_code == 200
+    assert verify_response.json()["email"] == next_email
+    assert verify_response.json()["pending_email"] is None
+    assert verify_response.json()["is_verified"] is True
+
+    me_after_verify = await client.get(
+        "/users/me",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert me_after_verify.status_code == 200
+    assert me_after_verify.json()["email"] == next_email
+    assert me_after_verify.json()["pending_email"] is None
+
 
 @pytest.mark.asyncio
 async def test_register_allows_optional_username_and_nickname(client: AsyncClient) -> None:
@@ -107,12 +221,24 @@ async def test_register_rejects_short_password(client: AsyncClient) -> None:
     )
 
     assert response.status_code == 400
-    assert response.json() == {
-        "detail": {
-            "code": "REGISTER_INVALID_PASSWORD",
-            "reason": "Password should be at least 8 characters",
-        }
-    }
+    assert response.json()["error"]["code"] == "HTTP_ERROR"
+    assert "Password should be at least 8 characters" in response.json()["error"]["message"]
+
+
+@pytest.mark.asyncio
+async def test_register_rejects_password_without_required_case_and_symbol(client: AsyncClient) -> None:
+    response = await client.post(
+        "/auth/register",
+        json={
+            "email": f"auth-{uuid.uuid4().hex[:8]}@example.com",
+            "password": "Strongpass123",
+            "username": f"password-policy-{uuid.uuid4().hex[:6]}",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "HTTP_ERROR"
+    assert "Password must include uppercase, lowercase, and special characters" in response.json()["error"]["message"]
 
 
 @pytest.mark.asyncio
@@ -139,7 +265,8 @@ async def test_register_rejects_duplicate_username(client: AsyncClient) -> None:
     )
 
     assert second_response.status_code == 400
-    assert second_response.json() == {"detail": "REGISTER_USER_ALREADY_EXISTS"}
+    assert second_response.json()["error"]["code"] == "HTTP_ERROR"
+    assert "REGISTER_USER_ALREADY_EXISTS" in second_response.json()["error"]["message"]
 
 
 @pytest.mark.asyncio

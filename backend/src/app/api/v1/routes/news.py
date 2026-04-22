@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: TC002
 
+from app.auth.fastapi_users import current_active_user
 from app.core.database import get_async_session
+from app.core.exceptions import ServiceUnavailableError
 from app.schemas.news import (  # noqa: TC001
     HomepageNewsResponse,
     HomepageNewsSourceGroup,
@@ -16,8 +19,10 @@ from app.schemas.news import (  # noqa: TC001
     NewsSummarizeRequest,
     NewsSummarizeResponse,
 )
-from app.services.news_service import ingest_homepage_news, list_homepage_news, semantic_search_news
+from app.services.news_service import ingest_homepage_news, list_homepage_news
 from app.services.rag_service import generate_news_rag_summary
+
+logger = logging.getLogger(__name__)
 
 news_router = APIRouter(prefix="/news", tags=["news"])
 
@@ -26,6 +31,7 @@ news_router = APIRouter(prefix="/news", tags=["news"])
 async def ingest_news(
     payload: NewsIngestRequest,
     session: Annotated[AsyncSession, Depends(get_async_session)],
+    _user=Depends(current_active_user),
 ) -> NewsIngestResponse:
     result = await ingest_homepage_news(
         session,
@@ -42,14 +48,8 @@ async def search_news(
     n_results: Annotated[int, Query(ge=1, le=50)] = 10,
     source: str | None = None,
 ) -> NewsSearchResponse:
-    results = await semantic_search_news(
-        session,
-        query=query,
-        n_results=n_results,
-        source=source,
-    )
-    typed_results = [NewsSearchResult.model_validate(result) for result in results]
-    return NewsSearchResponse(query=query, results=typed_results)
+    del query, session, n_results, source
+    raise ServiceUnavailableError("News search is temporarily unavailable.")
 
 
 @news_router.get("/homepage", response_model=HomepageNewsResponse)
@@ -72,6 +72,7 @@ async def get_homepage_news(
 async def summarize_news(
     payload: NewsSummarizeRequest,
     session: Annotated[AsyncSession, Depends(get_async_session)],
+    _user=Depends(current_active_user),
 ) -> NewsSummarizeResponse:
     try:
         result = await generate_news_rag_summary(
@@ -82,7 +83,7 @@ async def summarize_news(
             provider=payload.provider,
         )
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+        raise ServiceUnavailableError(str(exc)) from exc
 
     return NewsSummarizeResponse(
         query=result.query,

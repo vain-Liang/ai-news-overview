@@ -41,7 +41,7 @@ export const RuntimeStatusCard = ({ backendState }: { backendState: BackendState
               <StatusItem label={t("home.runtimeAppName")} value={runtime.app_name} />
               <StatusItem label={t("home.runtimeMode")} value={runtime.debug ? "debug" : "production"} />
               <StatusItem label={t("home.runtimeLastUpdated")} value={runtime.server_time} />
-              <StatusItem label={t("home.runtimeAuth")} value={runtime.auth.login_path} />
+              <StatusItem label={t("home.runtimeAdmin")} value={runtime.admin.api_prefix} />
             </div>
             <div className="rounded-2xl border border-border/60 bg-background/70 p-4 text-sm text-muted-foreground">
               <div className="mb-2 flex items-center gap-2 font-medium text-foreground">
@@ -52,6 +52,7 @@ export const RuntimeStatusCard = ({ backendState }: { backendState: BackendState
                 <li>{runtime.auth.register_path}</li>
                 <li>{runtime.auth.login_path}</li>
                 <li>{runtime.auth.me_path}</li>
+                <li>{runtime.admin.api_prefix}</li>
               </ul>
             </div>
           </>

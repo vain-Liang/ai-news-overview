@@ -6,6 +6,17 @@ export type AuthUser = {
   is_verified: boolean;
   username: string | null;
   nickname: string | null;
+  pending_email: string | null;
+};
+
+export type ProfileUpdatePayload = {
+  email: string;
+  nickname: string;
+};
+
+export type ProfileUpdateResponse = {
+  user: AuthUser;
+  email_change_requested: boolean;
 };
 
 export type RuntimeStatus = {
@@ -13,6 +24,10 @@ export type RuntimeStatus = {
   app_name: string;
   debug: boolean;
   server_time: string;
+  admin: {
+    api_prefix: string;
+    ui_path: string;
+  };
   auth: {
     register_path: string;
     login_path: string;
@@ -51,15 +66,9 @@ export type RegisterFieldErrors = Partial<
 >;
 
 export type AuthPersistence = "local" | "session";
-export type AuthLoginMethod = "jwt" | "cookie";
-
-export type StoredAuthState = {
-  token: string;
-  persistence: AuthPersistence;
-};
 
 export type AuthActionResult =
-  | { ok: true }
+  | { ok: true; message?: string }
   | { ok: false; message: string };
 
 export const initialLoginForm: LoginFormState = {

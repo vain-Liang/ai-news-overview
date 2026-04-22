@@ -14,6 +14,7 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
 
     username: Mapped[str | None] = mapped_column(String(50), unique=True, index=True, nullable=True)
     nickname: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    pending_email: Mapped[str | None] = mapped_column(String(320), unique=True, index=True, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

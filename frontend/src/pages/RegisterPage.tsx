@@ -11,7 +11,6 @@ export const RegisterPage = () => {
       eyebrow={t("nav.register")}
       title={t("auth.registerTitle")}
       description={t("auth.registerDescription")}
-      footer={<div className="text-center text-sm text-muted-foreground">{t("home.highlightI18n")}</div>}
     >
       <RegisterForm />
     </AuthLayout>

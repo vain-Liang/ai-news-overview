@@ -1,31 +1,23 @@
 import type {
   AuthActionResult,
-  AuthLoginMethod,
-  AuthPersistence,
   AuthUser,
   BackendState,
   LoginFormState,
+  ProfileUpdatePayload,
   RegisterPayload,
 } from "../model";
 
 export type AuthContextValue = {
-  authMethod: AuthLoginMethod | null;
   backendState: BackendState;
   isAuthenticated: boolean;
   isAuthenticating: boolean;
   isBootstrapping: boolean;
   isRefreshingProfile: boolean;
-  persistence: AuthPersistence;
   refreshRuntime: () => Promise<void>;
   refreshProfile: () => Promise<AuthActionResult>;
-  register: (payload: RegisterPayload, persistence: AuthPersistence) => Promise<AuthActionResult>;
-  setPersistence: (value: AuthPersistence) => void;
-  signIn: (
-    payload: LoginFormState,
-    persistence: AuthPersistence,
-    method: AuthLoginMethod,
-  ) => Promise<AuthActionResult>;
+  register: (payload: RegisterPayload) => Promise<AuthActionResult>;
+  signIn: (payload: LoginFormState) => Promise<AuthActionResult>;
   signOut: () => Promise<void>;
-  token: string;
+  updateProfile: (payload: ProfileUpdatePayload) => Promise<AuthActionResult>;
   user: AuthUser | null;
 };

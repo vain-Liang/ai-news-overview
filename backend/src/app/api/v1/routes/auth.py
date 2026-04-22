@@ -30,6 +30,7 @@ auth_router.include_router(
 auth_router.include_router(
     fastapi_users.get_auth_router(bearer_backend),
     prefix="/auth/jwt",
+    deprecated=True,
 )
 
 auth_router.include_router(
@@ -153,10 +154,19 @@ async def verify_account(
         user = await user_manager.verify(token, request)
         return UserRead.model_validate(user)
     except (exceptions.InvalidVerifyToken, exceptions.UserNotExists):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrorCode.VERIFY_USER_BAD_TOKEN,
-        ) from None
+        try:
+            user = await user_manager.verify_email_change(token, request)
+            return UserRead.model_validate(user)
+        except (exceptions.InvalidVerifyToken, exceptions.UserNotExists):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=ErrorCode.VERIFY_USER_BAD_TOKEN,
+            ) from None
+        except exceptions.UserAlreadyExists:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="The requested email address is already in use.",
+            ) from None
     except exceptions.UserAlreadyVerified:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

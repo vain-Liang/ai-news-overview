@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -12,6 +13,8 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
     from app.core.config import LlmProvider
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -87,6 +90,7 @@ async def generate_news_rag_summary(
         persist_dir=persist_dir,
     )
     if not results:
+        logger.info("RAG summary: no results found for query=%r source=%r", query, source)
         return NewsRagSummaryResult(
             query=query,
             summary="未检索到相关新闻，无法生成基于数据的摘要。",

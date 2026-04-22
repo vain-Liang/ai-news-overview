@@ -15,9 +15,18 @@ export const VerifyAccountCard = () => {
   const [searchParams] = useSearchParams();
   const initialToken = useMemo(() => searchParams.get("token")?.trim() ?? "", [searchParams]);
   const verificationEmail = useMemo(() => searchParams.get("email")?.trim() ?? "", [searchParams]);
+  const isEmailChangeMode = useMemo(() => searchParams.get("mode") === "email-change", [searchParams]);
   const [token, setToken] = useState(initialToken);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(initialToken ? "loading" : "idle");
   const [message, setMessage] = useState<string | null>(null);
+
+  const buildSuccessMessage = useCallback(
+    (email: string) =>
+      isEmailChangeMode
+        ? t("auth.verifyEmailChangeSuccess", { email })
+        : t("auth.verifyAccountSuccess", { email }),
+    [isEmailChangeMode, t],
+  );
 
   const verifyToken = useCallback(
     async (nextToken: string) => {
@@ -25,13 +34,13 @@ export const VerifyAccountCard = () => {
       try {
         const user = await confirmAccountVerification(nextToken);
         setStatus("success");
-        setMessage(t("auth.verifyAccountSuccess", { email: user.email }));
+        setMessage(buildSuccessMessage(user.email));
       } catch (error) {
         setStatus("error");
         setMessage(error instanceof Error ? error.message : t("auth.verifyAccountError"));
       }
     },
-    [t],
+    [buildSuccessMessage, t],
   );
 
   useEffect(() => {
@@ -48,7 +57,7 @@ export const VerifyAccountCard = () => {
           return;
         }
         setStatus("success");
-        setMessage(t("auth.verifyAccountSuccess", { email: user.email }));
+        setMessage(buildSuccessMessage(user.email));
       } catch (error) {
         if (cancelled) {
           return;
@@ -63,7 +72,7 @@ export const VerifyAccountCard = () => {
     return () => {
       cancelled = true;
     };
-  }, [initialToken, t]);
+  }, [buildSuccessMessage, initialToken, t]);
 
   return (
     <Card>

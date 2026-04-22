@@ -6,14 +6,16 @@ import sys
 from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
+import jwt
 from fastapi_users import BaseUserManager, InvalidPasswordException, UUIDIDMixin, exceptions
+from fastapi_users.jwt import decode_jwt, generate_jwt
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase  # noqa: TC002
 from sqlalchemy import func, select
 from zxcvbn import zxcvbn
 
 from app.core.config import get_settings
 from app.models.user import User
-from app.services.mail import send_email_message
+from app.tasks.mail_jobs import send_email_task
 
 if TYPE_CHECKING:
     from fastapi import Request, Response
@@ -27,8 +29,11 @@ logger = logging.getLogger(__name__)
 class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
     reset_password_token_secret = settings.auth_secret
     verification_token_secret = settings.auth_secret
+    email_change_token_secret = settings.auth_secret
+    email_change_token_audience = "fastapi-users:verify-email-change"
     reset_password_token_lifetime_seconds = settings.token_lifetime_seconds
     verification_token_lifetime_seconds = settings.token_lifetime_seconds
+    email_change_token_lifetime_seconds = settings.token_lifetime_seconds
 
     async def validate_password(
         self,
@@ -45,21 +50,18 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
                 reason="Password should not contain e-mail",
             )
 
+        has_lowercase = bool(re.search(r"[a-z]", password))
+        has_uppercase = bool(re.search(r"[A-Z]", password))
+        has_symbol = bool(re.search(r"[^a-zA-Z0-9]", password))
+        if not (has_lowercase and has_uppercase and has_symbol):
+            raise InvalidPasswordException(
+                reason="Password must include uppercase, lowercase, and special characters",
+            )
+
         # Use [zxcvbn](https://github.com/dwolfhub/zxcvbn-python) to check weak password
         if zxcvbn(password)["score"] < 3:
             raise InvalidPasswordException(
                 reason="Password is too weak",
-            )
-
-        patterns = [
-            r"[a-z]",
-            r"[A-Z]",
-            r"[0-9]",
-            r"[^a-zA-Z0-9]",
-        ]
-        if sum(bool(re.search(p, password)) for p in patterns) < 3:
-            raise InvalidPasswordException(
-                reason="Password must include at least 3 of: lowercase, uppercase, numbers, symbols",
             )
 
     async def on_after_register(self, user: User, request: Request | None = None) -> None:
@@ -93,7 +95,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
                 color_code="33",
             )
 
-        await self._send_auth_action_email(
+        self._send_auth_action_email(
             to_email=user.email,
             subject="Reset your password",
             headline="Reset your password",
@@ -121,7 +123,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
                 color_code="36",
             )
 
-        await self._send_auth_action_email(
+        self._send_auth_action_email(
             to_email=user.email,
             subject="Confirm your account",
             headline="Confirm your account",
@@ -133,9 +135,46 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
     async def on_after_verify(self, user: User, request: Request | None = None) -> None:
         logger.info("User %s verified their email address.", user.id)
 
+    async def on_after_request_email_change(
+        self,
+        user: User,
+        token: str,
+        pending_email: str,
+        request: Request | None = None,
+    ) -> None:
+        verify_url = f"{settings.frontend_base_url}/verify-account?token={token}&mode=email-change&email={pending_email}"
+        if settings.debug:
+            self._print_debug_link_notice(
+                title="EMAIL CHANGE VERIFICATION LINK",
+                subtitle="Open this URL in the browser to confirm the new email address during local development.",
+                user_email=pending_email,
+                url=verify_url,
+                color_code="35",
+            )
+
+        self._send_auth_action_email(
+            to_email=pending_email,
+            subject="Confirm your new email address",
+            headline="Confirm your new email address",
+            action_url=verify_url,
+            action_label="Confirm new email",
+            fallback_instructions="If the button does not work, copy and paste this URL into your browser:",
+        )
+
+    async def on_after_verify_email_change(self, user: User, request: Request | None = None) -> None:
+        logger.info("User %s verified a pending email change.", user.id)
+
     async def _username_exists(self, username: str) -> bool:
         user_db = cast("SQLAlchemyUserDatabase[User, UUID]", self.user_db)
         statement = select(User).where(func.lower(User.username) == func.lower(username))
+        result = await user_db.session.execute(statement)
+        return result.scalar_one_or_none() is not None
+
+    async def _pending_email_exists(self, pending_email: str, *, excluding_user_id: UUID | None = None) -> bool:
+        user_db = cast("SQLAlchemyUserDatabase[User, UUID]", self.user_db)
+        statement = select(User).where(func.lower(User.pending_email) == func.lower(pending_email))
+        if excluding_user_id is not None:
+            statement = statement.where(User.id != excluding_user_id)
         result = await user_db.session.execute(statement)
         return result.scalar_one_or_none() is not None
 
@@ -201,6 +240,79 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         await self.on_after_update(updated_user, updated_user_data, request)
         return updated_user
 
+    async def request_email_change(
+        self,
+        user: User,
+        new_email: str,
+        request: Request | None = None,
+    ) -> User:
+        if not user.is_active:
+            raise exceptions.UserInactive
+
+        normalized_email = new_email.strip().lower()
+        if normalized_email == user.email:
+            return user
+
+        existing_user = await self.user_db.get_by_email(normalized_email)
+        if existing_user is not None and existing_user.id != user.id:
+            raise exceptions.UserAlreadyExists
+
+        if await self._pending_email_exists(normalized_email, excluding_user_id=user.id):
+            raise exceptions.UserAlreadyExists
+
+        updated_user = await self._update(user, {"pending_email": normalized_email})
+        token = generate_jwt(
+            {
+                "sub": str(updated_user.id),
+                "email": normalized_email,
+                "aud": self.email_change_token_audience,
+            },
+            self.email_change_token_secret,
+            self.email_change_token_lifetime_seconds,
+        )
+        await self.on_after_request_email_change(updated_user, token, normalized_email, request)
+        return updated_user
+
+    async def verify_email_change(self, token: str, request: Request | None = None) -> User:
+        try:
+            data = decode_jwt(
+                token,
+                self.email_change_token_secret,
+                [self.email_change_token_audience],
+            )
+        except jwt.PyJWTError as exc:
+            raise exceptions.InvalidVerifyToken from exc
+
+        try:
+            user_id = data["sub"]
+            pending_email = str(data["email"]).strip().lower()
+        except KeyError as exc:
+            raise exceptions.InvalidVerifyToken from exc
+
+        try:
+            parsed_id = self.parse_id(user_id)
+            user = await self.get(parsed_id)
+        except (exceptions.InvalidID, exceptions.UserNotExists) as exc:
+            raise exceptions.InvalidVerifyToken from exc
+
+        if not user.pending_email or user.pending_email.lower() != pending_email:
+            raise exceptions.InvalidVerifyToken
+
+        existing_user = await self.user_db.get_by_email(pending_email)
+        if existing_user is not None and existing_user.id != user.id:
+            raise exceptions.UserAlreadyExists
+
+        verified_user = await self._update(
+            user,
+            {
+                "email": pending_email,
+                "pending_email": None,
+                "is_verified": True,
+            },
+        )
+        await self.on_after_verify_email_change(verified_user, request)
+        return verified_user
+
     @staticmethod
     def _normalize_optional_text(value: str | None) -> str | None:
         if value is None:
@@ -208,7 +320,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         normalized = value.strip()
         return normalized or None
 
-    async def _send_auth_action_email(
+    def _send_auth_action_email(
         self,
         *,
         to_email: str,
@@ -235,14 +347,14 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         )
 
         try:
-            await send_email_message(
+            send_email_task.delay(
                 to_email=to_email,
                 subject=subject,
                 text_body=text_body,
                 html_body=html_body,
             )
         except Exception:
-            logger.exception("Failed to send auth email '%s' to %s", subject, to_email)
+            logger.exception("Failed to queue auth email '%s' to %s", subject, to_email)
 
     @staticmethod
     def _print_debug_link_notice(

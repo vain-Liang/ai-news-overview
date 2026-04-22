@@ -92,3 +92,28 @@ def test_mail_tls_and_ssl_cannot_both_be_enabled() -> None:
             smtp_use_tls=True,
             smtp_use_ssl=True,
         )
+
+
+def test_admin_api_prefix_is_normalized() -> None:
+    settings = Settings(
+        auth_secret="test-secret",
+        postgres_host="localhost",
+        postgres_user="user",
+        postgres_password="pass",
+        postgres_db="db",
+        admin_api_prefix=" backoffice/console/ ",
+    )
+    assert settings.admin_api_prefix_path == "/backoffice/console"
+    assert settings.admin_api_entry == "/backoffice/console/"
+
+
+def test_admin_api_prefix_requires_a_path_segment() -> None:
+    with pytest.raises(ValueError, match="path segment"):
+        Settings(
+            auth_secret="test-secret",
+            postgres_host="localhost",
+            postgres_user="user",
+            postgres_password="pass",
+            postgres_db="db",
+            admin_api_prefix="/",
+        )

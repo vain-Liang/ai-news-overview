@@ -11,7 +11,6 @@ export const LoginPage = () => {
       eyebrow={t("nav.login")}
       title={t("auth.loginTitle")}
       description={t("auth.loginDescription")}
-      footer={<div className="text-center text-sm text-muted-foreground">{t("home.highlightRoutes")}</div>}
     >
       <LoginForm />
     </AuthLayout>

@@ -1,7 +1,5 @@
 import i18n from "../../../shared/i18n/config.ts";
 import type {
-  AuthLoginMethod,
-  AuthPersistence,
   AuthUser,
   LoginFormState,
   RegisterFieldErrors,
@@ -9,6 +7,9 @@ import type {
 } from "../model";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const lowercasePattern = /[a-z]/;
+const uppercasePattern = /[A-Z]/;
+const symbolPattern = /[^a-zA-Z0-9]/;
 
 export const sanitizeEmail = (value: string) => value.trim().toLowerCase();
 
@@ -41,6 +42,12 @@ export const getRegisterFieldErrors = (
     errors.password = i18n.t("validation.passwordLength");
   } else if (email && form.password.toLowerCase().includes(email)) {
     errors.password = i18n.t("validation.passwordEmail");
+  } else if (
+    !lowercasePattern.test(form.password) ||
+    !uppercasePattern.test(form.password) ||
+    !symbolPattern.test(form.password)
+  ) {
+    errors.password = i18n.t("validation.passwordCaseSymbol");
   }
 
   if (!form.confirmPassword) {
@@ -62,24 +69,3 @@ export const getRegisterValidationMessage = (form: RegisterFormState) => {
   );
 };
 
-export const getPersistenceCopy = (persistence: AuthPersistence) =>
-  persistence === "local"
-    ? {
-        label: i18n.t("home.sessionRemembered"),
-        description: i18n.t("home.sessionRememberedDesc"),
-      }
-    : {
-        label: i18n.t("home.sessionTemporary"),
-        description: i18n.t("home.sessionTemporaryDesc"),
-      };
-
-export const getLoginMethodCopy = (method: AuthLoginMethod) =>
-  method === "jwt"
-    ? {
-        label: i18n.t("auth.loginWithJwt"),
-        description: i18n.t("auth.loginWithJwtDescription"),
-      }
-    : {
-        label: i18n.t("auth.loginWithCookie"),
-        description: i18n.t("auth.loginWithCookieDescription"),
-      };

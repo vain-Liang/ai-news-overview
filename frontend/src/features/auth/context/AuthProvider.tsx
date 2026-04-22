@@ -14,19 +14,15 @@ import {
   loginUser,
   logoutUser,
   registerUser,
+  updateCurrentUser,
 } from "../api/auth-client";
-import {
-  clearAuthToken,
-  readAuthState,
-  writeAuthToken,
-} from "../lib/auth-storage";
+import { clearAuthToken } from "../lib/auth-storage";
 import type {
   AuthActionResult,
-  AuthLoginMethod,
-  AuthPersistence,
   AuthUser,
   BackendState,
   LoginFormState,
+  ProfileUpdatePayload,
   RegisterPayload,
 } from "../model";
 import { AuthContext } from "./AuthContext";
@@ -37,14 +33,6 @@ const toMessage = (error: unknown, fallback: string) =>
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const { t } = useTranslation();
-  const initialState = useMemo(() => readAuthState(), []);
-  const [token, setToken] = useState(initialState.token);
-  const [authMethod, setAuthMethod] = useState<AuthLoginMethod | null>(
-    initialState.token ? "jwt" : null,
-  );
-  const [persistence, setPersistence] = useState<AuthPersistence>(
-    initialState.persistence,
-  );
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
@@ -83,103 +71,50 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   }, [t]);
 
   const clearSession = useCallback(() => {
-    clearAuthToken();
-    setToken("");
-    setAuthMethod(null);
     setUser(null);
   }, []);
 
-  const restoreSession = useCallback(
-    async (nextToken?: string) => {
-      setIsRefreshingProfile(true);
-      try {
-        const nextUser = await fetchCurrentUser(nextToken);
-        setToken(nextToken ?? "");
-        setAuthMethod(nextToken ? "jwt" : "cookie");
-        setUser(nextUser);
-        return { ok: true } as AuthActionResult;
-      } catch {
-        if (nextToken) {
-          clearAuthToken();
-        }
-        setToken("");
-        setAuthMethod(null);
-        setUser(null);
-        return {
-          ok: false,
-          message: t("backend.restoredSessionExpired"),
-        } as AuthActionResult;
-      } finally {
-        setIsRefreshingProfile(false);
-      }
-    },
-    [t],
-  );
+  const restoreSession = useCallback(async (): Promise<AuthActionResult> => {
+    setIsRefreshingProfile(true);
+    try {
+      const nextUser = await fetchCurrentUser();
+      setUser(nextUser);
+      return { ok: true };
+    } catch {
+      setUser(null);
+      return { ok: false, message: t("backend.restoredSessionExpired") };
+    } finally {
+      setIsRefreshingProfile(false);
+    }
+  }, [t]);
 
   useEffect(() => {
     void refreshRuntime();
   }, [refreshRuntime]);
 
   useEffect(() => {
+    // Clear any legacy JWT tokens stored from the previous bearer auth method
+    clearAuthToken();
+
     const bootstrapSession = async () => {
-      const storedToken = initialState.token;
-      let result = storedToken
-        ? await restoreSession(storedToken)
-        : await restoreSession();
-
-      if (!result.ok && storedToken) {
-        result = await restoreSession();
-      }
-
-      if (!result.ok) {
-        clearSession();
-      }
-
+      await restoreSession();
       setIsBootstrapping(false);
     };
 
     void bootstrapSession();
-  }, [clearSession, initialState.token, restoreSession]);
+  }, [restoreSession]);
 
   const signIn = useCallback(
-    async (
-      payload: LoginFormState,
-      nextPersistence: AuthPersistence,
-      method: AuthLoginMethod,
-    ) => {
+    async (payload: LoginFormState): Promise<AuthActionResult> => {
       setIsAuthenticating(true);
       try {
-        const response = await loginUser(payload, method);
-        setPersistence(nextPersistence);
-
-        if (method === "jwt") {
-          const accessToken = response?.access_token;
-
-          if (!accessToken) {
-            return {
-              ok: false,
-              message: t("auth.jwtLoginTokenMissing"),
-            } satisfies AuthActionResult;
-          }
-
-          writeAuthToken(accessToken, nextPersistence);
-          const result = await restoreSession(accessToken);
-          return result.ok
-            ? ({ ok: true } satisfies AuthActionResult)
-            : result;
-        }
-
-        clearAuthToken();
-        setToken("");
-        const result = await restoreSession();
-        return result.ok
-          ? ({ ok: true } satisfies AuthActionResult)
-          : result;
+        await loginUser(payload);
+        return await restoreSession();
       } catch (error) {
         return {
           ok: false,
           message: toMessage(error, t("backend.offline")),
-        } satisfies AuthActionResult;
+        };
       } finally {
         setIsAuthenticating(false);
       }
@@ -188,23 +123,16 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   );
 
   const register = useCallback(
-    async (payload: RegisterPayload, nextPersistence: AuthPersistence) => {
+    async (payload: RegisterPayload): Promise<AuthActionResult> => {
       setIsAuthenticating(true);
       try {
         await registerUser(payload);
-        const loginResult = await signIn(
-          { email: payload.email, password: payload.password },
-          nextPersistence,
-          "jwt",
-        );
-        return loginResult.ok
-          ? ({ ok: true } satisfies AuthActionResult)
-          : loginResult;
+        return await signIn({ email: payload.email, password: payload.password });
       } catch (error) {
         return {
           ok: false,
           message: toMessage(error, t("backend.offline")),
-        } satisfies AuthActionResult;
+        };
       } finally {
         setIsAuthenticating(false);
       }
@@ -212,58 +140,81 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     [signIn, t],
   );
 
-  const refreshProfile = useCallback(async () => {
-    if (!token && authMethod !== "cookie") {
-      return { ok: false, message: t("home.notSignedIn") } satisfies AuthActionResult;
+  const refreshProfile = useCallback(async (): Promise<AuthActionResult> => {
+    if (!user) {
+      return { ok: false, message: t("home.notSignedIn") };
     }
+    return restoreSession();
+  }, [restoreSession, t, user]);
 
-    return restoreSession(token || undefined);
-  }, [authMethod, restoreSession, t, token]);
+  const updateProfile = useCallback(
+    async (payload: ProfileUpdatePayload): Promise<AuthActionResult> => {
+      if (!user) {
+        return { ok: false, message: t("home.notSignedIn") };
+      }
+
+      setIsRefreshingProfile(true);
+      try {
+        const response = await updateCurrentUser(payload);
+        setUser(response.user);
+
+        if (response.email_change_requested && response.user.pending_email) {
+          return {
+            ok: true,
+            message: t("profile.emailChangeVerificationSent", {
+              email: response.user.pending_email,
+            }),
+          };
+        }
+
+        return { ok: true, message: t("profile.updateSuccess") };
+      } catch (error) {
+        return {
+          ok: false,
+          message: toMessage(error, t("backend.offline")),
+        };
+      } finally {
+        setIsRefreshingProfile(false);
+      }
+    },
+    [t, user],
+  );
 
   const signOut = useCallback(async () => {
-    const logoutTasks: Array<Promise<void>> = [];
-
-    if (token) {
-      logoutTasks.push(logoutUser("jwt", token));
+    try {
+      await logoutUser();
+    } catch {
+      // best-effort logout
     }
-
-    logoutTasks.push(logoutUser("cookie"));
-
-    await Promise.allSettled(logoutTasks);
     clearSession();
-  }, [clearSession, token]);
+  }, [clearSession]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      authMethod,
       backendState,
       isAuthenticated: Boolean(user),
       isAuthenticating,
       isBootstrapping,
       isRefreshingProfile,
-      persistence,
       refreshRuntime,
       refreshProfile,
       register,
-      setPersistence,
       signIn,
       signOut,
-      token,
+      updateProfile,
       user,
     }),
     [
-      authMethod,
       backendState,
       isAuthenticating,
       isBootstrapping,
       isRefreshingProfile,
-      persistence,
       refreshProfile,
       refreshRuntime,
       register,
       signIn,
       signOut,
-      token,
+      updateProfile,
       user,
     ],
   );

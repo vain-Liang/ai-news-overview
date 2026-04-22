@@ -40,3 +40,18 @@ test("register validation rejects passwords that contain the email", () => {
 
   assert.equal(message, "Password cannot contain your email address.");
 });
+
+test("register validation requires uppercase, lowercase, and special characters", () => {
+  const message = getRegisterValidationMessage({
+    email: "reader@example.com",
+    password: "Strongpass123",
+    confirmPassword: "Strongpass123",
+    username: "reader",
+    nickname: "Reader",
+  });
+
+  assert.equal(
+    message,
+    "Password must include uppercase, lowercase, and special characters.",
+  );
+});

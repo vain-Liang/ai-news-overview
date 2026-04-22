@@ -26,7 +26,11 @@ const formatTimestamp = (value: string | null, locale: string) => {
   }).format(timestamp);
 };
 
-export const HomepageNewsSection = () => {
+type HomepageNewsSectionProps = {
+  refreshToken?: number;
+};
+
+export const HomepageNewsSection = ({ refreshToken = 0 }: HomepageNewsSectionProps) => {
   const { i18n, t } = useTranslation();
   const [groups, setGroups] = useState<HomepageNewsGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,7 +64,7 @@ export const HomepageNewsSection = () => {
 
   useEffect(() => {
     void loadNews();
-  }, [loadNews]);
+  }, [loadNews, refreshToken]);
 
   return (
     <section className="space-y-6">
