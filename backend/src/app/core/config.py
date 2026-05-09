@@ -27,11 +27,14 @@ class Settings(BaseSettings):
 
     chroma_persist_dir: str = "./data/chroma"
     chroma_collection_name: str = "news_articles"
+    embedding_api_key: str = ""
+    embedding_base_url: str = ""
+    embedding_model_name: str = ""
 
     llm_provider: LlmProvider = "deepseek"
 
     deepseek_api_key: str = ""
-    deepseek_base_url: str = "https://api.deepseek.com/v1"
+    deepseek_base_url: str = "https://api.deepseek.com/"
     deepseek_model: str = "deepseek-chat"
     deepseek_temperature: float = Field(0.2, ge=0, le=2)
     deepseek_max_completion_tokens: int = Field(1200, gt=0)
@@ -76,6 +79,15 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     pipeline_daily_limit: int = Field(2, gt=0)
     pipeline_min_interval_seconds: int = Field(3600, gt=0)
+
+    # Per-site crawler cookies (semicolon-delimited name=value pairs).
+    # Leave empty to skip cookie injection for that site.
+    # Example: CRAWLER_COOKIE_XINHUA="token=abc123; uid=456"
+    crawler_cookie_xinhua: str = ""
+    crawler_cookie_thepaper: str = ""
+    crawler_cookie_people: str = ""
+    crawler_cookie_ifeng: str = ""
+    crawler_cookie_qqnews: str = ""
 
     model_config = SettingsConfigDict(
         env_file=BACKEND_DIR / ".env",

@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-import asyncio
 import logging
-from dataclasses import asdict, dataclass, replace
+from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any
 
-from app.crawlers.extractors import SITE_CONFIGS
+from app.crawlers.fetcher import SITE_MODULES
 from app.crawlers.news_crawler import crawl_all_sites
 from app.ingestion.pipeline import ingest_articles
-from app.llm.chains.article_summary import summarize_article
 from app.repositories.news import (
     get_news_articles_by_ids,
     list_latest_news_by_source,
@@ -26,8 +24,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_SUMMARY_CONCURRENCY = 5
-
 
 @dataclass(slots=True)
 class NewsIngestionResult:
@@ -38,21 +34,6 @@ class NewsIngestionResult:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
-
-
-async def _enrich_articles_with_summaries(articles: list[NewsArticle]) -> list[NewsArticle]:
-    sem = asyncio.Semaphore(_SUMMARY_CONCURRENCY)
-
-    async def _enrich(article: NewsArticle) -> NewsArticle:
-        async with sem:
-            try:
-                summary = await summarize_article(title=article.title, raw_summary=article.summary)
-                return replace(article, summary=summary.strip())
-            except Exception:
-                logger.warning("Failed to generate LLM summary for article %s, keeping original", article.id)
-                return article
-
-    return list(await asyncio.gather(*[_enrich(a) for a in articles]))
 
 
 def _record_to_news_result(record: NewsArticleRecord) -> dict[str, Any]:
@@ -83,7 +64,6 @@ async def ingest_homepage_news(
     persist_dir: str | None = None,
 ) -> NewsIngestionResult:
     articles = await crawl_all_sites(sources=sources, bypass_cache=bypass_cache)
-    articles = await _enrich_articles_with_summaries(articles)
     metadata_stored_count = await upsert_news_metadata(session, articles)
     store = _resolve_store(persist_dir)
     vector_stored_count = ingest_articles(articles, store)
@@ -106,10 +86,11 @@ async def semantic_search_news(
     query: str,
     n_results: int = 10,
     source: str | None = None,
+    topics: list[str] | None = None,
     persist_dir: str | None = None,
 ) -> list[dict[str, Any]]:
     store = _resolve_store(persist_dir)
-    matches = semantic_search(query, store, n_results=n_results, source=source)
+    matches = semantic_search(query, store, n_results=n_results, source=source, topics=topics)
     records = await get_news_articles_by_ids(session, [match.id for match in matches])
 
     enriched: list[dict[str, Any]] = []
@@ -145,7 +126,7 @@ async def list_homepage_news(
     *,
     per_source: int = 8,
 ) -> list[dict[str, Any]]:
-    source_order = list(SITE_CONFIGS)
+    source_order = list(SITE_MODULES)
     grouped_records = await list_latest_news_by_source(
         session,
         sources=source_order,

@@ -6,7 +6,9 @@ from typing import TYPE_CHECKING, Any, TypeAlias, cast
 
 import chromadb
 from chromadb.config import Settings
+from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
 
+from app.retrieval.filters import build_search_filter
 from app.vectorstore.base import SearchResult, VectorStoreBase
 
 if TYPE_CHECKING:
@@ -50,16 +52,47 @@ def get_chroma_client(persist_dir: str | None = None) -> chromadb.ClientAPI:
     return client
 
 
+def _build_embedding_function() -> OpenAIEmbeddingFunction | None:
+    from app.core.config import get_settings
+
+    s = get_settings()
+    if not s.embedding_model_name in ["text-embedding-ada-002", "text-embedding-3-small", "text-embedding-3-large"]:
+        return None
+    elif not s.embedding_api_key:
+        return None
+    elif not s.embedding_base_url:
+        return None
+
+    return OpenAIEmbeddingFunction(
+        api_key=s.embedding_api_key or None,
+        model_name=s.embedding_model_name,
+        api_base=s.embedding_base_url or None,
+    )
+
+
 def get_or_create_collection(
     *,
     persist_dir: str | None = None,
     collection_name: str | None = None,
 ) -> chromadb.Collection:
     client = get_chroma_client(persist_dir)
-    return client.get_or_create_collection(
-        name=_resolve_collection_name(collection_name),
-        metadata={"hnsw:space": "cosine"},
-    )
+    ef = _build_embedding_function()
+    name = _resolve_collection_name(collection_name)
+    kwargs: dict = {"name": name, "metadata": {"hnsw:space": "cosine"}}
+    if ef is not None:
+        kwargs["embedding_function"] = ef
+    try:
+        return client.get_or_create_collection(**kwargs)
+    except Exception as e:
+        if "Embedding function conflict" in str(e):
+            logger.warning(
+                "Embedding function conflict for collection '%s' — deleting and recreating with new EF. "
+                "Re-ingest data to repopulate.",
+                name,
+            )
+            client.delete_collection(name)
+            return client.create_collection(**kwargs)
+        raise
 
 
 def _upsert_article_dicts(
@@ -83,6 +116,7 @@ def _upsert_article_dicts(
         document = f"{title}\n{summary}".strip()
         ids.append(article["id"])
         documents.append(document)
+        raw_tags: list[str] = article.get("tags") or []
         metadatas.append(
             {
                 "url": article.get("url"),
@@ -91,6 +125,7 @@ def _upsert_article_dicts(
                 "author": article.get("author"),
                 "published_at": article.get("published_at_raw") or article.get("published_at"),
                 "crawled_at": article.get("crawled_at"),
+                "tags": f"|{'|'.join(raw_tags)}|" if raw_tags else "",
             }
         )
 
@@ -119,6 +154,7 @@ def store_articles(
             "author": article.author,
             "published_at_raw": article.published_at,
             "crawled_at": article.crawled_at,
+            "tags": article.tags,
         }
         for article in articles
     ]
@@ -130,12 +166,13 @@ def search_articles(
     *,
     n_results: int = 10,
     source: str | None = None,
+    topics: list[str] | None = None,
     persist_dir: str | None = None,
     collection_name: str | None = None,
 ) -> list[dict]:
     """Semantic search over stored news articles."""
     collection = get_or_create_collection(persist_dir=persist_dir, collection_name=collection_name)
-    where = {"source": source} if source else None
+    where = build_search_filter(source, topics)
     results = collection.query(
         query_texts=[query],
         n_results=n_results,
@@ -171,12 +208,17 @@ class ChromaVectorStore(VectorStoreBase):
         )
 
     def search_articles(
-        self, query: str, n_results: int = 10, source: str | None = None
+        self,
+        query: str,
+        n_results: int = 10,
+        source: str | None = None,
+        topics: list[str] | None = None,
     ) -> list[SearchResult]:
         raw = search_articles(
             query,
             n_results=n_results,
             source=source,
+            topics=topics,
             persist_dir=self._persist_dir,
             collection_name=self._collection_name,
         )

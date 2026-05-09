@@ -47,6 +47,7 @@ export type NewsSearchResult = {
 
 export type NewsSearchResponse = {
   query: string;
+  topics: string[];
   results: NewsSearchResult[];
 };
 

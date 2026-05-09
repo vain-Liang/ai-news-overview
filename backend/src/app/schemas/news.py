@@ -66,4 +66,5 @@ class NewsArticleRead(BaseModel):
 
 class NewsSearchResponse(BaseModel):
     query: str
+    topics: list[str] = Field(default_factory=list)
     results: list[NewsSearchResult] = Field(default_factory=list)

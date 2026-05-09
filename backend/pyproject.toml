@@ -20,6 +20,7 @@ dependencies = [
     "celery[redis]>=5.4.0",
     "redis>=5.0.0",
     "zxcvbn>=4.5.0",
+    "openai>=2.32.0",
 ]
 authors = [{ name = "vain-Liang", email = "qiviki@outlook.com" }]
 
@@ -102,6 +103,9 @@ extend-immutable-calls = ["fastapi.Depends", "fastapi.params.Depends", "fastapi.
 testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
+markers = [
+    "network: marks tests that require live network access (deselect with '-m not network')",
+]
 
 [tool.fastapi]
 entrypoint = "src.app.main:app"

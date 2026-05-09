@@ -6,6 +6,18 @@ from typing import TYPE_CHECKING
 from app.services.news_service import NewsIngestionResult
 from app.services.rag_service import NewsRagSummaryResult
 
+_SAMPLE_SEARCH_RESULT = {
+    "id": "news-1",
+    "url": "https://www.news.cn/sample",
+    "source": "xinhua",
+    "title": "中国经济稳步增长",
+    "summary": "一季度多项经济指标向好。",
+    "author": "新华社记者",
+    "published_at": "2026-04-20 10:00",
+    "crawled_at": "2026-04-20T10:05:00+00:00",
+    "distance": 0.08,
+}
+
 if TYPE_CHECKING:
     from httpx import AsyncClient
 
@@ -69,11 +81,81 @@ async def test_ingest_news_endpoint(client, monkeypatch) -> None:
     }
 
 
-async def test_search_news_endpoint_returns_503_while_paused(client) -> None:
-    response = await client.get("/news/search", params={"query": "测试", "n_results": 5, "source": "xinhua"})
+async def test_search_news_endpoint_returns_results(client, monkeypatch) -> None:
+    async def fake_search(*_args, **kwargs) -> list[dict]:
+        assert kwargs["query"] == "经济增长"
+        assert kwargs["n_results"] == 5
+        return [_SAMPLE_SEARCH_RESULT]
 
-    assert response.status_code == 503
-    assert response.json()["error"]["message"] == "News search is temporarily unavailable."
+    monkeypatch.setattr("app.api.v1.routes.news.semantic_search_news", fake_search)
+
+    response = await client.get("/news/search", params={"query": "经济增长", "n_results": 5})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["query"] == "经济增长"
+    assert payload["topics"] == []
+    assert len(payload["results"]) == 1
+    assert payload["results"][0]["id"] == "news-1"
+    assert payload["results"][0]["distance"] == 0.08
+
+
+async def test_search_news_endpoint_passes_source_filter(client, monkeypatch) -> None:
+    async def fake_search(*_args, **kwargs) -> list[dict]:
+        assert kwargs["source"] == "xinhua"
+        assert kwargs["topics"] is None
+        return [_SAMPLE_SEARCH_RESULT]
+
+    monkeypatch.setattr("app.api.v1.routes.news.semantic_search_news", fake_search)
+
+    response = await client.get("/news/search", params={"query": "测试", "source": "xinhua"})
+
+    assert response.status_code == 200
+
+
+async def test_search_news_endpoint_passes_topics_filter(client, monkeypatch) -> None:
+    received: dict = {}
+
+    async def fake_search(*_args, **kwargs) -> list[dict]:
+        received.update(kwargs)
+        return [_SAMPLE_SEARCH_RESULT]
+
+    monkeypatch.setattr("app.api.v1.routes.news.semantic_search_news", fake_search)
+
+    response = await client.get(
+        "/news/search",
+        params=[("query", "AI"), ("topics", "science"), ("topics", "economy")],
+    )
+
+    assert response.status_code == 200
+    assert set(received["topics"]) == {"science", "economy"}
+    assert response.json()["topics"] == ["science", "economy"]
+
+
+async def test_search_news_endpoint_passes_source_and_topics(client, monkeypatch) -> None:
+    received: dict = {}
+
+    async def fake_search(*_args, **kwargs) -> list[dict]:
+        received.update(kwargs)
+        return []
+
+    monkeypatch.setattr("app.api.v1.routes.news.semantic_search_news", fake_search)
+
+    response = await client.get(
+        "/news/search",
+        params=[("query", "科技"), ("source", "xinhua"), ("topics", "tech")],
+    )
+
+    assert response.status_code == 200
+    assert received["source"] == "xinhua"
+    assert received["topics"] == ["tech"]
+    assert response.json()["results"] == []
+
+
+async def test_search_news_endpoint_rejects_empty_query(client) -> None:
+    response = await client.get("/news/search", params={"query": ""})
+
+    assert response.status_code == 422
 
 
 async def test_homepage_news_endpoint(client, monkeypatch) -> None:

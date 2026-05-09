@@ -18,5 +18,9 @@ class VectorStoreBase(ABC):
 
     @abstractmethod
     def search_articles(
-        self, query: str, n_results: int = 10, source: str | None = None
+        self,
+        query: str,
+        n_results: int = 10,
+        source: str | None = None,
+        topics: list[str] | None = None,
     ) -> list[SearchResult]: ...

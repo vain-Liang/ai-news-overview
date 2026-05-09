@@ -19,7 +19,7 @@ from app.schemas.news import (  # noqa: TC001
     NewsSummarizeRequest,
     NewsSummarizeResponse,
 )
-from app.services.news_service import ingest_homepage_news, list_homepage_news
+from app.services.news_service import ingest_homepage_news, list_homepage_news, semantic_search_news
 from app.services.rag_service import generate_news_rag_summary
 
 logger = logging.getLogger(__name__)
@@ -47,9 +47,20 @@ async def search_news(
     session: Annotated[AsyncSession, Depends(get_async_session)],
     n_results: Annotated[int, Query(ge=1, le=50)] = 10,
     source: str | None = None,
+    topics: Annotated[list[str] | None, Query()] = None,
 ) -> NewsSearchResponse:
-    del query, session, n_results, source
-    raise ServiceUnavailableError("News search is temporarily unavailable.")
+    results = await semantic_search_news(
+        session,
+        query=query,
+        n_results=n_results,
+        source=source,
+        topics=topics,
+    )
+    return NewsSearchResponse(
+        query=query,
+        topics=topics or [],
+        results=[NewsSearchResult.model_validate(item) for item in results],
+    )
 
 
 @news_router.get("/homepage", response_model=HomepageNewsResponse)

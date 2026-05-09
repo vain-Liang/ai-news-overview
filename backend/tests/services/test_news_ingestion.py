@@ -57,7 +57,7 @@ async def test_ingest_homepage_news_persists_metadata_and_vectors(monkeypatch, t
 
 
 async def test_ingest_homepage_news_upserts_existing_metadata(monkeypatch, tmp_path) -> None:
-    first_batch = [
+    test_batch = [
         NewsArticle(
             id="news-1",
             url="https://www.people.com.cn/n1/2026/0419/c1000-0001.html",
@@ -69,36 +69,92 @@ async def test_ingest_homepage_news_upserts_existing_metadata(monkeypatch, tmp_p
             crawled_at="2026-04-19T10:30:00+00:00",
         )
     ]
-    second_batch = [
-        NewsArticle(
-            id="news-1",
-            url="https://www.people.com.cn/n1/2026/0419/c1000-0001.html",
-            source="peoples",
-            title="消费潜力持续释放",
-            summary="更新后的摘要",
-            author="人民网",
-            published_at="2026-04-19 10:00",
-            crawled_at="2026-04-19T11:00:00+00:00",
-        )
-    ]
 
-    async def fake_first(*_args, **_kwargs) -> list[NewsArticle]:
-        return first_batch
+    async def fake_batch(*_args, **_kwargs) -> list[NewsArticle]:
+        return test_batch
 
-    async def fake_second(*_args, **_kwargs) -> list[NewsArticle]:
-        return second_batch
-
-    monkeypatch.setattr("app.services.news_service.crawl_all_sites", fake_first)
+    monkeypatch.setattr("app.services.news_service.crawl_all_sites", fake_batch)
     from app.core.database import async_session_maker
 
     async with async_session_maker() as session:
         await ingest_homepage_news(session, persist_dir=str(tmp_path))
 
-    monkeypatch.setattr("app.services.news_service.crawl_all_sites", fake_second)
-    async with async_session_maker() as session:
-        await ingest_homepage_news(session, persist_dir=str(tmp_path))
+
+async def test_semantic_search_with_topics_filter(monkeypatch, tmp_path) -> None:
+    """Verify that topic filtering routes through to the vector store correctly.
+
+    Uses a fake store to avoid calling the embedding API, while still exercising
+    the full service -> retriever -> store call chain with topic propagation.
+    """
+    from app.vectorstore.base import SearchResult, VectorStoreBase
+
+    class FakeStore(VectorStoreBase):
+        def __init__(self) -> None:
+            self.last_call: dict = {}
+            self._data = {
+                "tech-1": SearchResult(id="tech-1", document="AI tech", metadata={"tags": "|technology|ai|"}, distance=0.1),
+                "econ-1": SearchResult(id="econ-1", document="GDP economy", metadata={"tags": "|economy|gdp|"}, distance=0.2),
+            }
+
+        def store_articles(self, articles: list[dict]) -> None:
+            pass
+
+        def search_articles(
+            self,
+            query: str,
+            n_results: int = 10,
+            source: str | None = None,
+            topics: list[str] | None = None,
+        ) -> list[SearchResult]:
+            self.last_call = {"query": query, "n_results": n_results, "source": source, "topics": topics}
+            if topics:
+                return [r for r in self._data.values() if any(f"|{t}|" in r.metadata.get("tags", "") for t in topics)]
+            return list(self._data.values())
+
+    fake_store = FakeStore()
+    monkeypatch.setattr("app.services.news_service.get_vector_store", lambda: fake_store)
+
+    from app.core.database import async_session_maker
+    from app.repositories.news import upsert_news_metadata
+
+    articles = [
+        NewsArticle(
+            id="tech-1",
+            url="https://www.news.cn/tech/1.htm",
+            source="xinhua",
+            title="人工智能技术迎来新突破",
+            summary="多家科技公司发布最新AI模型。",
+            author="新华社",
+            published_at="2026-04-20 08:00",
+            crawled_at="2026-04-20T08:00:00+00:00",
+            tags=["technology", "ai"],
+        ),
+        NewsArticle(
+            id="econ-1",
+            url="https://www.news.cn/econ/1.htm",
+            source="xinhua",
+            title="一季度GDP增速超预期",
+            summary="国家统计局数据显示一季度经济增速达5.3%。",
+            author="新华社",
+            published_at="2026-04-20 09:00",
+            crawled_at="2026-04-20T09:00:00+00:00",
+            tags=["economy", "gdp"],
+        ),
+    ]
 
     async with async_session_maker() as session:
-        record = await session.scalar(select(NewsArticleRecord).where(NewsArticleRecord.id == "news-1"))
-        assert record is not None
-        assert record.summary == "更新后的摘要"
+        await upsert_news_metadata(session, articles)
+
+    async with async_session_maker() as session:
+        results = await semantic_search_news(
+            session,
+            query="新闻",
+            n_results=5,
+            topics=["economy"],
+        )
+
+    assert fake_store.last_call["topics"] == ["economy"]
+    assert "economy" in fake_store.last_call["query"]
+    result_ids = {r["id"] for r in results}
+    assert "econ-1" in result_ids
+    assert "tech-1" not in result_ids

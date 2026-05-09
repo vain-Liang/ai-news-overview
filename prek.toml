@@ -5,3 +5,10 @@ rev = "v4.13.9"
 [[repos.hooks]]
 id = "commitizen"
 stages = ["commit-msg"]
+
+[[repos]]
+repo = "https://github.com/gitleaks/gitleaks"
+rev = "v8.24.2"
+
+[[repos.hooks]]
+id = "gitleaks"

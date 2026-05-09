@@ -45,11 +45,11 @@ export const resources = {
           badge: "News ingestion",
           title: "Fetch news",
           description:
-            "Choose one or more sources and call /news/ingest to refresh stored news. News ingestion and summary APIs require authentication, while search is temporarily unavailable.",
+            "Choose one or more sources to crawl and store fresh headlines. Ingestion and summarize require authentication; semantic search is open to all.",
           sessionLoading: "Checking your session…",
           authRequiredTitle: "Sign in to fetch news",
           authRequiredDescription:
-            "News ingestion and summary APIs require authentication. News search and semantic search are temporarily unavailable.",
+            "Ingestion and summarize require authentication. Sign in to fetch news.",
           loginAction: "Go to login",
           sourcePickerTitle: "Select news sources",
           sourcePickerDescription: "Only the selected sources will be fetched in this run.",
@@ -75,9 +75,10 @@ export const resources = {
           qqnews: "Tencent News",
         },
         search: {
+          badge: "Semantic search",
           title: "Semantic Search",
           description:
-            "Search stored articles by meaning. Enter any topic or question and the system returns the most relevant headlines from the vector store.",
+            "Search stored articles by meaning. Enter a topic or question to find the most relevant headlines from the vector store.",
           placeholder: "e.g. AI chip export restrictions",
           button: "Search",
           error: "Unable to run search right now.",
@@ -432,11 +433,11 @@ export const resources = {
           badge: "新闻获取",
           title: "新闻获取",
           description:
-            "选择一个或多个新闻源后调用 /news/ingest 刷新已入库新闻。新闻获取与摘要接口需要登录鉴权，新闻搜索与语义搜索当前暂停开放。",
+            "选择一个或多个新闻源抓取并入库最新标题。获取与摘要接口需要登录鉴权；语义搜索无需登录即可使用。",
           sessionLoading: "正在检查登录状态…",
           authRequiredTitle: "登录后可获取新闻",
           authRequiredDescription:
-            "新闻获取与摘要接口需要登录鉴权，新闻搜索与语义搜索当前暂停开放。",
+            "获取与摘要接口需要登录鉴权，请登录后继续。",
           loginAction: "前往登录",
           sourcePickerTitle: "选择新闻源",
           sourcePickerDescription: "本次仅抓取已选中的新闻源。",
@@ -461,9 +462,10 @@ export const resources = {
           qqnews: "腾讯新闻",
         },
         search: {
+          badge: "语义搜索",
           title: "语义搜索",
           description:
-            "按语义搜索已入库的文章。输入任意话题或问题，系统将从向量库中返回最相关的新闻标题。",
+            "按语义搜索已入库的文章。输入话题或问题，系统从向量库中返回最相关的新闻标题。",
           placeholder: "例如：AI芯片出口管制",
           button: "搜索",
           error: "暂时无法执行搜索。",

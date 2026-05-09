@@ -7,6 +7,8 @@ import { UserMenu } from "../features/auth/components/UserMenu";
 import { useAuth } from "../features/auth/hooks/useAuth";
 import { HomepageNewsSection } from "../features/news/components/HomepageNewsSection";
 import { NewsIngestSection } from "../features/news/components/NewsIngestSection";
+import { NewsSearchSection } from "../features/news/components/NewsSearchSection";
+import { NewsSummarySection } from "../features/news/components/NewsSummarySection";
 import { Button } from "../shared/ui/button";
 import { LanguageSwitcher } from "../shared/ui/language-switcher";
 import { Separator } from "../shared/ui/separator";
@@ -20,7 +22,7 @@ export const NewsPage = () => {
   return (
     <main className="min-h-screen bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-10">
-        <header className="flex flex-col gap-4 rounded-3xl border border-border/60 bg-background/80 p-4 shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+        <header className="relative z-10 flex flex-col gap-4 rounded-3xl border border-border/60 bg-background/80 p-4 shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <span className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">AI</span>
             <div>
@@ -42,6 +44,14 @@ export const NewsPage = () => {
         </header>
 
         <HomepageNewsSection refreshToken={refreshToken} />
+
+        <Separator />
+
+        <NewsSearchSection />
+
+        <Separator />
+
+        <NewsSummarySection />
 
         <Separator />
 
