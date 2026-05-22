@@ -105,19 +105,26 @@ class Settings(BaseSettings):
         return v
 
     @field_validator(
+        "debug",
         "cookie_secure",
         "cookie_httponly",
         "mail_enabled",
         "smtp_use_tls",
         "smtp_use_ssl",
         "smtp_validate_certs",
+        mode="before",
     )
     @classmethod
     def validate_bool_from_env(cls, v: str | bool) -> bool:
         """Handle boolean values from .env file."""
         if isinstance(v, bool):
             return v
-        return v.lower() in ("true", "1", "yes", "on")
+        normalized = v.strip().lower()
+        if normalized in {"true", "1", "yes", "on", "debug", "development", "dev"}:
+            return True
+        if normalized in {"false", "0", "no", "off", "release", "production", "prod"}:
+            return False
+        raise ValueError(f"Invalid boolean value: {v}")
 
     @field_validator("cookie_domain")
     @classmethod
@@ -179,6 +186,10 @@ class Settings(BaseSettings):
         if not self.auth_secret:
             msg = "AUTH_SECRET must be configured."
             raise ValueError(msg)
+
+        if self.smtp_port == 465 and self.smtp_use_tls and not self.smtp_use_ssl:
+            self.smtp_use_tls = False
+            self.smtp_use_ssl = True
 
         missing_fields = [
             field_name

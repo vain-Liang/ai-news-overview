@@ -1,0 +1,15 @@
+export default {
+  title: "平台可用性",
+  description: "面向管理员的简化服务状态视图。",
+  online: "运行正常",
+  offline: "不可用",
+  checking: "检查中",
+  summary: "当前状态",
+  response: "服务响应",
+  healthyTitle: "平台运行正常",
+  healthyDescription: "API 当前可访问，工作台应可正常提供服务。",
+  unavailableTitle: "服务中断",
+  unavailableDescription: "前端当前无法连接后端，依赖实时数据的操作可能在服务恢复前失败。",
+  pendingTitle: "状态检查中",
+  pendingDescription: "前端仍在确认后端是否可达。",
+};

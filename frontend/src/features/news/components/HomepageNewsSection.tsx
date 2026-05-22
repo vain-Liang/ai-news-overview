@@ -8,7 +8,7 @@ import type { HomepageNewsGroup } from "../model";
 import { Alert } from "../../../shared/ui/alert";
 import { Badge } from "../../../shared/ui/badge";
 import { Button } from "../../../shared/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../shared/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../shared/ui/card";
 
 const formatTimestamp = (value: string | null, locale: string) => {
   if (!value) {
@@ -31,7 +31,7 @@ type HomepageNewsSectionProps = {
 };
 
 export const HomepageNewsSection = ({ refreshToken = 0 }: HomepageNewsSectionProps) => {
-  const { i18n, t } = useTranslation();
+  const { i18n, t } = useTranslation("homepageNewsSection");
   const [groups, setGroups] = useState<HomepageNewsGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -55,7 +55,7 @@ export const HomepageNewsSection = ({ refreshToken = 0 }: HomepageNewsSectionPro
       setGroups(sortHomepageGroups(response.groups));
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : t("news.error"),
+        error instanceof Error ? error.message : t("error"),
       );
     } finally {
       setIsLoading(false);
@@ -72,28 +72,23 @@ export const HomepageNewsSection = ({ refreshToken = 0 }: HomepageNewsSectionPro
         <div className="space-y-3">
           <Badge className="w-fit" variant="secondary">
             <Newspaper className="size-3.5" />
-            {t("news.badge")}
+            {t("badge")}
           </Badge>
-          <div className="space-y-1">
-            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              {t("news.title")}
-            </h2>
-            <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
-              {t("news.description")}
-            </p>
-          </div>
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            {t("title")}
+          </h2>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           <Badge variant="outline">
-            {t("news.sourceCount", { count: activeSourceCount })}
+            {t("sourceCount", { count: activeSourceCount })}
           </Badge>
           <Badge variant="outline">
-            {t("news.articleCount", { count: totalArticles })}
+            {t("articleCount", { count: totalArticles })}
           </Badge>
           <Button type="button" variant="outline" onClick={() => void loadNews()} disabled={isLoading}>
             <RefreshCw className={isLoading ? "animate-spin" : undefined} />
-            {t("news.refresh")}
+            {t("refresh")}
           </Button>
         </div>
       </div>
@@ -107,26 +102,24 @@ export const HomepageNewsSection = ({ refreshToken = 0 }: HomepageNewsSectionPro
           {Array.from({ length: 5 }, (_, index) => (
             <Card key={index} className="min-h-72 border-dashed">
               <CardHeader>
-                <CardTitle>{t("news.loading")}</CardTitle>
-                <CardDescription>{t("news.loadingDescription")}</CardDescription>
+                <CardTitle>{t("loading")}</CardTitle>
               </CardHeader>
             </Card>
           ))}
         </div>
       ) : totalArticles === 0 ? (
-        <Alert>{t("news.empty")}</Alert>
+        <Alert>{t("empty")}</Alert>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {visibleGroups.map((group) => (
             <Card key={group.source} className="flex h-full flex-col">
               <CardHeader className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
-                  <CardTitle>{t(`news.sources.${group.source}`)}</CardTitle>
+                  <CardTitle>{t(`sourceLabels.${group.source}`)}</CardTitle>
                   <Badge variant="secondary">
-                    {t("news.groupCount", { count: group.articles.length })}
+                    {t("groupCount", { count: group.articles.length })}
                   </Badge>
                 </div>
-                <CardDescription>{t("news.groupDescription")}</CardDescription>
               </CardHeader>
               <CardContent className="flex-1">
                 <ol className="space-y-3">
@@ -144,12 +137,12 @@ export const HomepageNewsSection = ({ refreshToken = 0 }: HomepageNewsSectionPro
                       <div className="mt-2 space-y-1 text-xs text-muted-foreground">
                         {article.published_at ? (
                           <div>
-                            {t("news.publishedAt")}: {article.published_at}
+                            {t("publishedAt")}: {article.published_at}
                           </div>
                         ) : null}
                         {article.crawled_at ? (
                           <div>
-                            {t("news.crawledAt")}:{" "}
+                            {t("crawledAt")}:{" "}
                             {formatTimestamp(article.crawled_at, i18n.resolvedLanguage || "en")}
                           </div>
                         ) : null}

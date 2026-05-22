@@ -58,10 +58,10 @@ const translateKnownBackendMessage = (message: string | null | undefined) => {
   }
 
   if (includesText(message, "Password should be at least 8 characters")) {
-    return i18n.t("validation.passwordLength");
+    return i18n.t("validationPasswordLength", { ns: "http" });
   }
   if (includesText(message, "Password should not contain e-mail")) {
-    return i18n.t("validation.passwordEmail");
+    return i18n.t("validationPasswordEmail", { ns: "http" });
   }
   if (
     includesText(
@@ -73,46 +73,46 @@ const translateKnownBackendMessage = (message: string | null | undefined) => {
       "Password must include at least 3 of: lowercase, uppercase, numbers, symbols",
     )
   ) {
-    return i18n.t("validation.passwordCaseSymbol");
+    return i18n.t("validationPasswordCaseSymbol", { ns: "http" });
   }
   if (includesText(message, "Password is too weak")) {
-    return i18n.t("backendErrors.passwordTooWeak");
+    return i18n.t("passwordTooWeak", { ns: "http" });
   }
   if (includesText(message, "REGISTER_USER_ALREADY_EXISTS")) {
-    return i18n.t("backendErrors.registerUserAlreadyExists");
+    return i18n.t("registerUserAlreadyExists", { ns: "http" });
   }
   if (includesText(message, "LOGIN_BAD_CREDENTIALS")) {
-    return i18n.t("backendErrors.loginBadCredentials");
+    return i18n.t("loginBadCredentials", { ns: "http" });
   }
   if (includesText(message, "VERIFY_USER_BAD_TOKEN")) {
-    return i18n.t("backendErrors.verifyUserBadToken");
+    return i18n.t("verifyUserBadToken", { ns: "http" });
   }
   if (includesText(message, "VERIFY_USER_ALREADY_VERIFIED")) {
-    return i18n.t("backendErrors.verifyUserAlreadyVerified");
+    return i18n.t("verifyUserAlreadyVerified", { ns: "http" });
   }
   if (includesText(message, "RESET_PASSWORD_BAD_TOKEN")) {
-    return i18n.t("backendErrors.resetPasswordBadToken");
+    return i18n.t("resetPasswordBadToken", { ns: "http" });
   }
   if (includesText(message, "RESET_PASSWORD_INVALID_PASSWORD")) {
-    return i18n.t("backendErrors.resetPasswordInvalidPassword");
+    return i18n.t("resetPasswordInvalidPassword", { ns: "http" });
   }
   if (
     includesText(message, "A user with this email already exists.") ||
     includesText(message, "The requested email address is already in use.")
   ) {
-    return i18n.t("backendErrors.emailAlreadyInUse");
+    return i18n.t("emailAlreadyInUse", { ns: "http" });
   }
   if (includesText(message, "Inactive users cannot change their email.")) {
-    return i18n.t("backendErrors.inactiveUserEmailChange");
+    return i18n.t("inactiveUserEmailChange", { ns: "http" });
   }
   if (includesText(message, "Superusers cannot disable their own account.")) {
-    return i18n.t("backendErrors.adminCannotDisableSelf");
+    return i18n.t("adminCannotDisableSelf", { ns: "http" });
   }
   if (includesText(message, "created_from cannot be later than created_to.")) {
-    return i18n.t("backendErrors.invalidCreatedRange");
+    return i18n.t("invalidCreatedRange", { ns: "http" });
   }
   if (includesText(message, "updated_from cannot be later than updated_to.")) {
-    return i18n.t("backendErrors.invalidUpdatedRange");
+    return i18n.t("invalidUpdatedRange", { ns: "http" });
   }
 
   return null;
@@ -122,7 +122,7 @@ const translateValidationDetails = (payload: ErrorPayload) => {
   const firstDetailMessage = payload.error?.details?.[0]?.msg ?? null;
   return (
     translateKnownBackendMessage(firstDetailMessage) ||
-    i18n.t("backendErrors.validationFailed")
+    i18n.t("validationFailed", { ns: "http" })
   );
 };
 
@@ -153,18 +153,18 @@ const translateErrorPayload = (
   }
 
   if (payload.error?.code === "INTERNAL_ERROR" || response.status >= 500) {
-    return i18n.t("backendErrors.internal");
+    return i18n.t("internal", { ns: "http" });
   }
 
   if (response.status === 401 || response.status === 403) {
-    return i18n.t("backendErrors.unauthorized");
+    return i18n.t("unauthorized", { ns: "http" });
   }
 
   if (response.status === 404) {
-    return i18n.t("backendErrors.notFound");
+    return i18n.t("notFound", { ns: "http" });
   }
 
-  return i18n.t("backendErrors.generic");
+  return i18n.t("generic", { ns: "http" });
 };
 
 const getErrorMessage = async (response: Response) => {
@@ -176,8 +176,8 @@ const getErrorMessage = async (response: Response) => {
   }
 
   return response.statusText
-    ? i18n.t("backendErrors.genericWithStatus", { status: response.statusText })
-    : i18n.t("backendErrors.generic");
+    ? i18n.t("genericWithStatus", { ns: "http", status: response.statusText })
+    : i18n.t("generic", { ns: "http" });
 };
 
 const requestWithPrefix = async <T>(

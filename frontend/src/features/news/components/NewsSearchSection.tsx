@@ -18,7 +18,7 @@ type SearchState =
   | { kind: "done"; query: string; results: NewsSearchResult[] };
 
 const ResultCard = ({ article }: { article: NewsSearchResult }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["newsSearchSection", "homepageNewsSection"]);
 
   return (
     <li className="rounded-xl border border-border/60 bg-background/60 p-4 space-y-2">
@@ -33,11 +33,11 @@ const ResultCard = ({ article }: { article: NewsSearchResult }) => {
       </a>
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <Badge variant="secondary" className="text-xs">
-          {t(`news.sources.${article.source}`, { defaultValue: article.source })}
+          {t(`sourceLabels.${article.source}`, { ns: "homepageNewsSection", defaultValue: article.source })}
         </Badge>
         {article.distance != null ? (
           <span>
-            {t("news.search.relevance")}: {(1 - article.distance).toFixed(2)}
+            {t("relevance")}: {(1 - article.distance).toFixed(2)}
           </span>
         ) : null}
         {article.published_at ? <span>{article.published_at}</span> : null}
@@ -50,7 +50,7 @@ const ResultCard = ({ article }: { article: NewsSearchResult }) => {
 };
 
 export const NewsSearchSection = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["newsSearchSection", "homepageNewsSection"]);
   const [query, setQuery] = useState("");
   const [source, setSource] = useState<NewsSourceCode | null>(null);
   const [state, setState] = useState<SearchState>({ kind: "idle" });
@@ -66,7 +66,7 @@ export const NewsSearchSection = () => {
     } catch (error) {
       setState({
         kind: "error",
-        message: error instanceof Error ? error.message : t("news.search.error"),
+        message: error instanceof Error ? error.message : t("error"),
       });
     }
   };
@@ -76,16 +76,11 @@ export const NewsSearchSection = () => {
       <div className="space-y-3">
         <Badge className="w-fit" variant="secondary">
           <Search className="size-3.5" />
-          {t("news.search.badge")}
+          {t("badge")}
         </Badge>
-        <div className="space-y-1">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            {t("news.search.title")}
-          </h2>
-          <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
-            {t("news.search.description")}
-          </p>
-        </div>
+        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          {t("title")}
+        </h2>
       </div>
 
       <Card>
@@ -99,7 +94,7 @@ export const NewsSearchSection = () => {
                 size="sm"
                 onClick={() => setSource(source === src ? null : src)}
               >
-                {t(`news.sources.${src}`)}
+                {t(`sourceLabels.${src}`, { ns: "homepageNewsSection" })}
               </Button>
             ))}
           </div>
@@ -108,7 +103,7 @@ export const NewsSearchSection = () => {
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={t("news.search.placeholder")}
+              placeholder={t("placeholder")}
               onKeyDown={(e) => {
                 if (e.key === "Enter") void handleSearch();
               }}
@@ -120,7 +115,7 @@ export const NewsSearchSection = () => {
               disabled={state.kind === "loading" || !query.trim()}
             >
               <Search className="size-4" />
-              {state.kind === "loading" ? t("common.loading") : t("news.search.button")}
+              {state.kind === "loading" ? "Loading…" : t("button")}
             </Button>
           </div>
 
@@ -129,13 +124,13 @@ export const NewsSearchSection = () => {
           {state.kind === "done" ? (
             <div className="space-y-4">
               <Badge variant="outline">
-                {t("news.search.resultCount", {
+                {t("resultCount", {
                   count: state.results.length,
                   query: state.query,
                 })}
               </Badge>
               {state.results.length === 0 ? (
-                <Alert>{t("news.search.noResults")}</Alert>
+                <Alert>{t("noResults")}</Alert>
               ) : (
                 <ol className="space-y-3">
                   {state.results.map((article) => (

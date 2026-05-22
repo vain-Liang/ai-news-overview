@@ -6,7 +6,7 @@ import { fetchAdminUsers, updateAdminUserStatus } from "../api/admin-client";
 import type { AdminUser, AdminUserFilters, AdminUsersResponse } from "../model";
 import { Badge } from "../../../shared/ui/badge";
 import { Button } from "../../../shared/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../shared/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../shared/ui/card";
 import { Input } from "../../../shared/ui/input";
 import { Label } from "../../../shared/ui/label";
 import { Switch } from "../../../shared/ui/switch";
@@ -76,7 +76,7 @@ const PaginationButton = ({
 );
 
 export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: string }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("adminUserManagementCard");
   const [data, setData] = useState<AdminUsersResponse | null>(null);
   const [filters, setFilters] = useState<AdminFilterFormState>(defaultFilters);
   const [appliedFilters, setAppliedFilters] = useState<AdminUserFilters>(() => buildQueryFilters(defaultFilters));
@@ -93,7 +93,7 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
       setData(response);
       setAppliedFilters(nextFilters);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : t("admin.loadError"));
+      setError(loadError instanceof Error ? loadError.message : t("loadError"));
     } finally {
       setIsLoading(false);
     }
@@ -105,10 +105,10 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
 
   const summaryItems = useMemo(
     () => [
-      { key: "total", label: t("admin.totalUsers"), value: data?.summary.total ?? 0 },
-      { key: "active", label: t("admin.activeUsers"), value: data?.summary.active ?? 0 },
-      { key: "inactive", label: t("admin.inactiveUsers"), value: data?.summary.inactive ?? 0 },
-      { key: "superusers", label: t("admin.superusers"), value: data?.summary.superusers ?? 0 },
+      { key: "total", label: t("totalUsers"), value: data?.summary.total ?? 0 },
+      { key: "active", label: t("activeUsers"), value: data?.summary.active ?? 0 },
+      { key: "inactive", label: t("inactiveUsers"), value: data?.summary.inactive ?? 0 },
+      { key: "superusers", label: t("superusers"), value: data?.summary.superusers ?? 0 },
     ],
     [data, t],
   );
@@ -121,7 +121,7 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
       await updateAdminUserStatus(account.id, !account.is_active);
       await loadUsers(appliedFilters);
     } catch (toggleError) {
-      setError(toggleError instanceof Error ? toggleError.message : t("admin.loadError"));
+      setError(toggleError instanceof Error ? toggleError.message : t("loadError"));
     } finally {
       setPendingUserId(null);
     }
@@ -153,7 +153,7 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
   }, [data?.pagination.page, data?.pagination.total_pages]);
 
   const resultSummary = data
-    ? t("admin.resultSummary", {
+    ? t("resultSummary", {
         page: data.pagination.page,
         totalPages: data.pagination.total_pages || 1,
         totalItems: data.pagination.total_items,
@@ -165,12 +165,11 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
       <CardHeader className="gap-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <CardTitle>{t("admin.manageUsers")}</CardTitle>
-            <CardDescription>{t("admin.manageUsersDescription")}</CardDescription>
+            <CardTitle>{t("title")}</CardTitle>
           </div>
           <Button type="button" variant="outline" onClick={() => void loadUsers(appliedFilters)} disabled={isLoading}>
             <RefreshCw className="size-4" />
-            {t("admin.refreshUsers")}
+            {t("refresh")}
           </Button>
         </div>
 
@@ -185,20 +184,20 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
         <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
           <div className="mb-4 flex items-center gap-2 text-sm font-medium text-foreground">
             <Search className="size-4" />
-            {t("admin.filtersTitle")}
+            {t("filtersTitle")}
           </div>
           <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
             <div className="space-y-2 xl:col-span-2">
-              <Label htmlFor="admin-search">{t("admin.searchLabel")}</Label>
+              <Label htmlFor="admin-search">{t("searchLabel")}</Label>
               <Input
                 id="admin-search"
                 value={filters.search}
                 onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
-                placeholder={t("admin.searchPlaceholder")}
+                placeholder={t("searchPlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="admin-status">{t("admin.statusFilter")}</Label>
+              <Label htmlFor="admin-status">{t("statusFilter")}</Label>
               <select
                 id="admin-status"
                 className="flex h-11 w-full rounded-xl border border-input bg-background/80 px-4 py-2 text-sm shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
@@ -210,13 +209,13 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
                   }))
                 }
               >
-                <option value="all">{t("admin.statusAll")}</option>
-                <option value="active">{t("admin.statusActive")}</option>
-                <option value="inactive">{t("admin.statusInactive")}</option>
+                <option value="all">{t("statusAll")}</option>
+                <option value="active">{t("statusActive")}</option>
+                <option value="inactive">{t("statusInactive")}</option>
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="admin-page-size">{t("admin.pageSize")}</Label>
+              <Label htmlFor="admin-page-size">{t("pageSize")}</Label>
               <select
                 id="admin-page-size"
                 className="flex h-11 w-full rounded-xl border border-input bg-background/80 px-4 py-2 text-sm shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
@@ -230,13 +229,13 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
               >
                 {[10, 20, 50].map((size) => (
                   <option key={size} value={size}>
-                    {t("admin.pageSizeOption", { count: size })}
+                    {t("pageSizeOption", { count: size })}
                   </option>
                 ))}
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="admin-created-from">{t("admin.createdFrom")}</Label>
+              <Label htmlFor="admin-created-from">{t("createdFrom")}</Label>
               <Input
                 id="admin-created-from"
                 type="datetime-local"
@@ -245,7 +244,7 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="admin-created-to">{t("admin.createdTo")}</Label>
+              <Label htmlFor="admin-created-to">{t("createdTo")}</Label>
               <Input
                 id="admin-created-to"
                 type="datetime-local"
@@ -254,7 +253,7 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="admin-updated-from">{t("admin.updatedFrom")}</Label>
+              <Label htmlFor="admin-updated-from">{t("updatedFrom")}</Label>
               <Input
                 id="admin-updated-from"
                 type="datetime-local"
@@ -263,7 +262,7 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="admin-updated-to">{t("admin.updatedTo")}</Label>
+              <Label htmlFor="admin-updated-to">{t("updatedTo")}</Label>
               <Input
                 id="admin-updated-to"
                 type="datetime-local"
@@ -274,10 +273,10 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
             <Button type="button" onClick={() => void handleSearch()}>
-              {t("admin.applyFilters")}
+              {t("applyFilters")}
             </Button>
             <Button type="button" variant="outline" onClick={() => void handleResetFilters()}>
-              {t("admin.resetFilters")}
+              {t("resetFilters")}
             </Button>
           </div>
         </div>
@@ -290,7 +289,7 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
 
         {isLoading ? (
           <div className="rounded-2xl border border-border/60 bg-background/70 p-6 text-sm text-muted-foreground">
-            {t("admin.loadingUsers")}
+            {t("loading")}
           </div>
         ) : null}
 
@@ -306,7 +305,7 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
                   onClick={() => void loadUsers({ ...appliedFilters, page: Math.max(1, (data.pagination.page || 1) - 1) })}
                   disabled={data.pagination.page <= 1}
                 >
-                  {t("admin.previousPage")}
+                  {t("previousPage")}
                 </Button>
                 {pageNumbers.map((page) => (
                   <PaginationButton
@@ -323,7 +322,7 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
                   onClick={() => void loadUsers({ ...appliedFilters, page: data.pagination.page + 1 })}
                   disabled={data.pagination.page >= data.pagination.total_pages}
                 >
-                  {t("admin.nextPage")}
+                  {t("nextPage")}
                 </Button>
               </div>
             ) : null}
@@ -332,7 +331,7 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
 
         {!isLoading && data && data.users.length === 0 ? (
           <div className="rounded-2xl border border-border/60 bg-background/70 p-6 text-sm text-muted-foreground">
-            {t("admin.noUsers")}
+            {t("noUsers")}
           </div>
         ) : null}
 
@@ -348,22 +347,22 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
                     <div className="text-lg font-semibold">{account.nickname || account.username || account.email}</div>
                     <Badge variant={account.is_active ? "success" : "danger"}>
                       <UserRound className="size-3.5" />
-                      {account.is_active ? t("admin.accountActive") : t("admin.accountDisabled")}
+                      {account.is_active ? t("accountActive") : t("accountDisabled")}
                     </Badge>
                     {account.is_superuser ? (
                       <Badge variant="outline">
                         <ShieldCheck className="size-3.5" />
-                        {t("admin.superuserBadge")}
+                        {t("superuserBadge")}
                       </Badge>
                     ) : null}
-                    {isCurrentUser ? <Badge variant="secondary">{t("admin.you")}</Badge> : null}
+                    {isCurrentUser ? <Badge variant="secondary">{t("you")}</Badge> : null}
                   </div>
                   <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2 xl:grid-cols-4">
-                    <div>{t("home.email")}: {account.email}</div>
-                    <div>{t("home.username")}: {account.username || "—"}</div>
-                    <div>{t("home.nickname")}: {account.nickname || "—"}</div>
-                    <div>{t("admin.updatedAt")}: {formatDateTime(account.updated_at)}</div>
-                    <div>{t("admin.createdAt")}: {formatDateTime(account.created_at)}</div>
+                    <div>{t("email")}: {account.email}</div>
+                    <div>{t("username")}: {account.username || "—"}</div>
+                    <div>{t("nickname")}: {account.nickname || "—"}</div>
+                    <div>{t("updatedAt")}: {formatDateTime(account.updated_at)}</div>
+                    <div>{t("createdAt")}: {formatDateTime(account.created_at)}</div>
                   </div>
                 </div>
 
@@ -371,17 +370,17 @@ export const AdminUserManagementCard = ({ currentUserId }: { currentUserId: stri
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 font-medium text-foreground">
                       <Users className="size-4" />
-                      {t("admin.accountStatus")}
+                      {t("accountStatus")}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {isCurrentUser ? t("admin.cannotDisableSelf") : t("admin.accountStatusDescription")}
+                      {isCurrentUser ? t("cannotDisableSelf") : t("accountStatusDescription")}
                     </p>
                   </div>
                   <Switch
                     checked={account.is_active}
                     onCheckedChange={() => void handleToggleAccount(account)}
                     disabled={isCurrentUser || isPending}
-                    aria-label={t("admin.accountStatus")}
+                    aria-label={t("accountStatus")}
                   />
                 </div>
               </div>

@@ -12,7 +12,7 @@ import { Input } from "../../../shared/ui/input";
 import { Label } from "../../../shared/ui/label";
 
 export const ResendVerificationForm = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("resendVerificationForm");
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState(searchParams.get("email") ?? "");
   const [message, setMessage] = useState<string | null>(null);
@@ -26,7 +26,7 @@ export const ResendVerificationForm = () => {
 
     if (!canSubmit) {
       setMessageTone("error");
-      setMessage(t("validation.emailRequired"));
+      setMessage(t("validationEmailRequired"));
       return;
     }
 
@@ -34,10 +34,10 @@ export const ResendVerificationForm = () => {
     try {
       await requestVerificationEmail(email);
       setMessageTone("success");
-      setMessage(t("auth.resendVerificationSuccess"));
+      setMessage(t("success"));
     } catch (error) {
       setMessageTone("error");
-      setMessage(error instanceof Error ? error.message : t("auth.resendVerificationError"));
+      setMessage(error instanceof Error ? error.message : t("error"));
     } finally {
       setIsSubmitting(false);
     }
@@ -46,15 +46,15 @@ export const ResendVerificationForm = () => {
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
       {message ? <Alert variant={messageTone}>{message}</Alert> : null}
-      <Alert>{t("auth.resendVerificationHint")}</Alert>
+      <Alert>{t("hint")}</Alert>
 
       <div className="space-y-2">
-        <Label htmlFor="resend-verification-email">{t("auth.email")}</Label>
+        <Label htmlFor="resend-verification-email">{t("email")}</Label>
         <Input
           id="resend-verification-email"
           type="email"
           autoComplete="email"
-          placeholder={t("auth.emailPlaceholder")}
+          placeholder={t("emailPlaceholder")}
           value={email}
           onChange={(event) => setEmail(event.target.value)}
         />
@@ -62,12 +62,12 @@ export const ResendVerificationForm = () => {
 
       <Button type="submit" size="lg" className="w-full" disabled={!canSubmit || isSubmitting}>
         <MailPlus />
-        {isSubmitting ? t("auth.submittingResendVerification") : t("auth.submitResendVerification")}
+        {isSubmitting ? t("submitting") : t("submit")}
       </Button>
 
       <div className="text-sm text-muted-foreground">
         <Link className="font-medium text-primary hover:underline" to="/login">
-          {t("auth.backToLogin")}
+          {t("backToLogin")}
         </Link>
       </div>
     </form>

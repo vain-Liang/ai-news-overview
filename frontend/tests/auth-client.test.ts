@@ -19,7 +19,7 @@ const createJsonResponse = (body: unknown, init?: ResponseInit) =>
     ...init,
   });
 
-test("auth client uses bearer token when fetching the current user", async () => {
+test("auth client fetches the current user with cookie credentials", async () => {
   const calls: FetchCall[] = [];
 
   globalThis.fetch = async (input, init) => {
@@ -27,11 +27,10 @@ test("auth client uses bearer token when fetching the current user", async () =>
     return createJsonResponse({ id: "user-1", email: "demo@example.com", pending_email: null });
   };
 
-  await fetchCurrentUser("demo-token");
+  await fetchCurrentUser();
 
   assert.equal(String(calls[0]?.input), "/api/users/me");
-  assert.equal((calls[0]?.init?.headers as Record<string, string>).Authorization, "Bearer demo-token");
-  assert.equal(calls[0]?.init?.credentials, undefined);
+  assert.equal(calls[0]?.init?.credentials, "include");
 });
 
 test("auth client updates the current user with normalized fields", async () => {
@@ -45,11 +44,11 @@ test("auth client updates the current user with normalized fields", async () => 
     });
   };
 
-  await updateCurrentUser({ email: "  NEXT@EXAMPLE.COM ", nickname: "  Display Name  " }, "demo-token");
+  await updateCurrentUser({ email: "  NEXT@EXAMPLE.COM ", nickname: "  Display Name  " });
 
   assert.equal(String(calls[0]?.input), "/api/users/me");
   assert.equal(calls[0]?.init?.method, "PATCH");
-  assert.equal((calls[0]?.init?.headers as Record<string, string>).Authorization, "Bearer demo-token");
+  assert.equal(calls[0]?.init?.credentials, "include");
   assert.deepEqual(JSON.parse(String(calls[0]?.init?.body)), {
     email: "next@example.com",
     nickname: "Display Name",

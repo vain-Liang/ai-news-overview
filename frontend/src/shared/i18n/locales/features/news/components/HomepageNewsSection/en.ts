@@ -1,0 +1,27 @@
+export default {
+  badge: "Latest coverage",
+  title: "Latest stored headlines by source",
+  description:
+    "Browse the newest stored homepage headlines grouped by source and open the original article directly.",
+  refresh: "Refresh headlines",
+  loading: "Loading latest news…",
+  loadingDescription: "Reading stored news metadata from the backend.",
+  error: "Unable to load homepage news right now.",
+  empty: "No stored homepage news is available yet. Run a fresh ingestion to populate this view.",
+  sourceCount_one: "{{count}} source",
+  sourceCount_other: "{{count}} sources",
+  articleCount_one: "{{count}} headline",
+  articleCount_other: "{{count}} headlines",
+  groupCount_one: "{{count}} item",
+  groupCount_other: "{{count}} items",
+  groupDescription: "Open any headline to read the original article in a new tab.",
+  publishedAt: "Published",
+  crawledAt: "Crawled",
+  sourceLabels: {
+    xinhua: "Xinhua",
+    thepaper: "The Paper",
+    peoples: "People.cn",
+    ifeng: "ifeng",
+    qqnews: "Tencent News",
+  },
+};

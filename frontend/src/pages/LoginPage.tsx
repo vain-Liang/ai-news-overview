@@ -4,14 +4,10 @@ import { AuthLayout } from "../features/auth/components/AuthLayout";
 import { LoginForm } from "../features/auth/components/LoginForm";
 
 export const LoginPage = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("loginPage");
 
   return (
-    <AuthLayout
-      eyebrow={t("nav.login")}
-      title={t("auth.loginTitle")}
-      description={t("auth.loginDescription")}
-    >
+    <AuthLayout title={t("title")}>
       <LoginForm />
     </AuthLayout>
   );

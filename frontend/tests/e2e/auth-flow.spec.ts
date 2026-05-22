@@ -19,24 +19,13 @@ test("registers on /register and returns to the landing page with profile data",
   await page.getByLabel("Nickname").fill("Morning Briefing");
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm password", { exact: true }).fill(password);
-  await page.getByRole("switch", { name: "Remember me on this device" }).check();
   await page.getByRole("button", { name: "Create account" }).click();
 
   await expect(page).toHaveURL("/");
-  await expect(page.getByText(email)).toBeVisible();
-
-  const localToken = await page.evaluate(() =>
-    window.localStorage.getItem("ai-news-review.auth-token"),
-  );
-  const sessionToken = await page.evaluate(() =>
-    window.sessionStorage.getItem("ai-news-review.auth-token"),
-  );
-
-  expect(localToken).toBeTruthy();
-  expect(sessionToken).toBeNull();
+  await expect(page.getByText(email, { exact: true })).toBeVisible();
 });
 
-test("signs in from /login with a temporary session when remember me is disabled", async ({
+test("signs in from /login with the current browser session flow", async ({
   page,
   request,
 }) => {
@@ -53,21 +42,18 @@ test("signs in from /login with a temporary session when remember me is disabled
   expect(registerResponse.ok()).toBeTruthy();
 
   await page.goto("/login");
-  await page.getByRole("switch", { name: "Remember me on this device" }).uncheck();
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
 
   await expect(page).toHaveURL("/");
-  await expect(page.getByText(email)).toBeVisible();
+  await expect(page.getByText(email, { exact: true })).toBeVisible();
+});
 
-  const localToken = await page.evaluate(() =>
-    window.localStorage.getItem("ai-news-review.auth-token"),
-  );
-  const sessionToken = await page.evaluate(() =>
-    window.sessionStorage.getItem("ai-news-review.auth-token"),
-  );
+test("switches the landing page language", async ({ page }) => {
+  await page.goto("/");
 
-  expect(localToken).toBeNull();
-  expect(sessionToken).toBeTruthy();
+  await expect(page.getByText("Track the signal, not the scaffolding.")).toBeVisible();
+  await page.getByRole("button", { name: "简中" }).click();
+  await expect(page.getByText("聚焦内容本身，而不是开发痕迹。")).toBeVisible();
 });

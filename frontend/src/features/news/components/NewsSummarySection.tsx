@@ -10,7 +10,7 @@ import type { NewsSearchResult, NewsSourceCode, NewsSummarizeResponse } from "..
 import { Alert } from "../../../shared/ui/alert";
 import { Badge } from "../../../shared/ui/badge";
 import { Button } from "../../../shared/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../shared/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../shared/ui/card";
 import { Input } from "../../../shared/ui/input";
 
 type SummaryState =
@@ -20,7 +20,7 @@ type SummaryState =
   | { kind: "done"; data: NewsSummarizeResponse };
 
 const SourceItem = ({ article, index }: { article: NewsSearchResult; index: number }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["newsSummarySection", "newsSearchSection", "homepageNewsSection"]);
   return (
     <li className="rounded-xl border border-border/60 bg-background/60 p-3 space-y-1.5">
       <div className="flex items-start gap-2">
@@ -39,12 +39,12 @@ const SourceItem = ({ article, index }: { article: NewsSearchResult; index: numb
       </div>
       <div className="flex flex-wrap items-center gap-2 pl-7 text-xs text-muted-foreground">
         <Badge variant="secondary" className="text-xs">
-          {t(`news.sources.${article.source}`, { defaultValue: article.source })}
+          {t(`sourceLabels.${article.source}`, { ns: "homepageNewsSection", defaultValue: article.source })}
         </Badge>
         {article.published_at ? <span>{article.published_at}</span> : null}
         {article.distance != null ? (
           <span>
-            {t("news.search.relevance")}: {(1 - article.distance).toFixed(2)}
+            {t("relevance", { ns: "newsSearchSection" })}: {(1 - article.distance).toFixed(2)}
           </span>
         ) : null}
       </div>
@@ -53,7 +53,7 @@ const SourceItem = ({ article, index }: { article: NewsSearchResult; index: numb
 };
 
 export const NewsSummarySection = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["newsSummarySection", "homepageNewsSection"]);
   const { isAuthenticated, isBootstrapping } = useAuth();
   const [query, setQuery] = useState("");
   const [source, setSource] = useState<NewsSourceCode | null>(null);
@@ -70,7 +70,7 @@ export const NewsSummarySection = () => {
     } catch (error) {
       setState({
         kind: "error",
-        message: error instanceof Error ? error.message : t("news.summary.error"),
+        message: error instanceof Error ? error.message : t("error"),
       });
     }
   };
@@ -80,22 +80,17 @@ export const NewsSummarySection = () => {
       <div className="space-y-3">
         <Badge className="w-fit" variant="secondary">
           <Sparkles className="size-3.5" />
-          {t("news.summary.badge")}
+          {t("badge")}
         </Badge>
-        <div className="space-y-1">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            {t("news.summary.title")}
-          </h2>
-          <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
-            {t("news.summary.description")}
-          </p>
-        </div>
+        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          {t("title")}
+        </h2>
       </div>
 
       {isBootstrapping ? (
         <Card className="border-dashed">
           <CardHeader>
-            <CardTitle className="text-base">{t("news.ingest.sessionLoading")}</CardTitle>
+            <CardTitle className="text-base">{t("sessionLoading")}</CardTitle>
           </CardHeader>
         </Card>
       ) : null}
@@ -105,13 +100,12 @@ export const NewsSummarySection = () => {
           <CardHeader>
             <div className="flex items-center gap-2">
               <LockKeyhole className="size-4 text-primary" />
-              <CardTitle className="text-base">{t("news.ingest.authRequiredTitle")}</CardTitle>
+              <CardTitle className="text-base">{t("authRequiredTitle")}</CardTitle>
             </div>
-            <CardDescription>{t("news.ingest.authRequiredDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
-              <Link to="/login">{t("news.ingest.loginAction")}</Link>
+              <Link to="/login">{t("loginAction")}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -129,7 +123,7 @@ export const NewsSummarySection = () => {
                   size="sm"
                   onClick={() => setSource(source === src ? null : src)}
                 >
-                  {t(`news.sources.${src}`)}
+                  {t(`sourceLabels.${src}`, { ns: "homepageNewsSection" })}
                 </Button>
               ))}
             </div>
@@ -138,7 +132,7 @@ export const NewsSummarySection = () => {
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder={t("news.summary.queryPlaceholder")}
+                placeholder={t("queryPlaceholder")}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") void handleGenerate();
                 }}
@@ -151,14 +145,12 @@ export const NewsSummarySection = () => {
               >
                 <Wand2 className={state.kind === "loading" ? "animate-pulse" : undefined} />
                 {state.kind === "loading"
-                  ? t("news.summary.generating")
-                  : t("news.summary.generateButton")}
+                  ? t("generating")
+                  : t("generateButton")}
               </Button>
             </div>
 
-            {state.kind === "loading" ? (
-              <Alert>{t("news.summary.generatingDescription")}</Alert>
-            ) : null}
+            {state.kind === "loading" ? <Alert>{t("generating")}</Alert> : null}
 
             {state.kind === "error" ? <Alert variant="error">{state.message}</Alert> : null}
 
@@ -174,7 +166,7 @@ export const NewsSummarySection = () => {
                 {state.data.results.length > 0 ? (
                   <div className="space-y-2">
                     <div className="text-sm font-medium">
-                      {t("news.summary.sourcesTitle", { count: state.data.results.length })}
+                      {t("sourcesTitle", { count: state.data.results.length })}
                     </div>
                     <ol className="space-y-2">
                       {state.data.results.map((article, index) => (

@@ -12,7 +12,7 @@ import { Input } from "../../../shared/ui/input";
 import { Label } from "../../../shared/ui/label";
 
 export const ForgotPasswordForm = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("forgotPasswordForm");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [messageTone, setMessageTone] = useState<"error" | "success">("success");
@@ -25,7 +25,7 @@ export const ForgotPasswordForm = () => {
 
     if (!canSubmit) {
       setMessageTone("error");
-      setMessage(t("validation.emailRequired"));
+      setMessage(t("validationEmailRequired"));
       return;
     }
 
@@ -33,11 +33,11 @@ export const ForgotPasswordForm = () => {
     try {
       await requestPasswordReset(email);
       setMessageTone("success");
-      setMessage(t("auth.forgotPasswordSuccess"));
+      setMessage(t("success"));
     } catch (error) {
       setMessageTone("error");
       setMessage(
-        error instanceof Error ? error.message : t("backend.offline"),
+        error instanceof Error ? error.message : t("backendOffline"),
       );
     } finally {
       setIsSubmitting(false);
@@ -47,15 +47,15 @@ export const ForgotPasswordForm = () => {
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
       {message ? <Alert variant={messageTone}>{message}</Alert> : null}
-      <Alert>{t("auth.forgotPasswordHint")}</Alert>
+      <Alert>{t("hint")}</Alert>
 
       <div className="space-y-2">
-        <Label htmlFor="forgot-password-email">{t("auth.email")}</Label>
+        <Label htmlFor="forgot-password-email">{t("email")}</Label>
         <Input
           id="forgot-password-email"
           type="email"
           autoComplete="email"
-          placeholder={t("auth.emailPlaceholder")}
+          placeholder={t("emailPlaceholder")}
           value={email}
           onChange={(event) => setEmail(event.target.value)}
         />
@@ -63,13 +63,13 @@ export const ForgotPasswordForm = () => {
 
       <Button type="submit" size="lg" className="w-full" disabled={!canSubmit || isSubmitting}>
         <MailCheck />
-        {isSubmitting ? t("auth.submittingForgotPassword") : t("auth.submitForgotPassword")}
+        {isSubmitting ? t("submitting") : t("submit")}
       </Button>
 
       <Button asChild type="button" variant="ghost" className="w-full justify-center">
         <Link to="/login">
           <ArrowLeft />
-          {t("auth.backToLogin")}
+          {t("backToLogin")}
         </Link>
       </Button>
     </form>

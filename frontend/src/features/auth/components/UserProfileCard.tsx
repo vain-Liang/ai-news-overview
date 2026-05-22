@@ -5,7 +5,7 @@ import type { AuthUser } from "../model";
 import { Avatar, AvatarFallback } from "../../../shared/ui/avatar";
 import { Badge } from "../../../shared/ui/badge";
 import { Button } from "../../../shared/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../shared/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../shared/ui/card";
 
 const ProfileField = ({ label, value }: { label: string; value: string }) => (
   <div className="rounded-xl border border-border/60 bg-background/70 p-3">
@@ -29,7 +29,7 @@ export const UserProfileCard = ({
   onSignOut,
   user,
 }: UserProfileCardProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("userProfileCard");
   const initials = (user?.nickname || user?.username || user?.email || "AI")
     .slice(0, 2)
     .toUpperCase();
@@ -43,25 +43,20 @@ export const UserProfileCard = ({
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle>{t("profile.overviewTitle")}</CardTitle>
-              <CardDescription>
-                {isAuthenticated
-                  ? t("profile.overviewDescriptionUser")
-                  : t("profile.overviewDescriptionGuest")}
-              </CardDescription>
+              <CardTitle>{t("overviewTitle")}</CardTitle>
             </div>
           </div>
           <Badge variant={isAuthenticated ? "success" : "secondary"}>
             <UserRound className="size-3.5" />
-            {isAuthenticated ? t("common.online") : t("common.offline")}
+            {isAuthenticated ? t("signedIn") : t("signedOut")}
           </Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="grid gap-3 sm:grid-cols-2">
-          <ProfileField label={t("home.email")} value={user?.email ?? t("home.notSignedIn")} />
-          <ProfileField label={t("home.username")} value={user?.username ?? "—"} />
-          <ProfileField label={t("home.nickname")} value={user?.nickname ?? "—"} />
+          <ProfileField label={t("email")} value={user?.email ?? t("signedOut")} />
+          <ProfileField label={t("username")} value={user?.username ?? "—"} />
+          <ProfileField label={t("nickname")} value={user?.nickname ?? "—"} />
         </div>
 
         <div className="flex flex-wrap gap-3">
@@ -71,7 +66,7 @@ export const UserProfileCard = ({
             onClick={onRefreshProfile}
             disabled={!isAuthenticated || isRefreshingProfile}
           >
-            {t("home.refreshProfile")}
+            {t("refreshProfile")}
           </Button>
           <Button
             type="button"
@@ -79,7 +74,7 @@ export const UserProfileCard = ({
             onClick={onSignOut}
             disabled={!isAuthenticated}
           >
-            {t("home.signOut")}
+            {t("signOut")}
           </Button>
         </div>
       </CardContent>

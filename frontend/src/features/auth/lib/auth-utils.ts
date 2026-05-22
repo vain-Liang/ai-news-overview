@@ -19,7 +19,7 @@ export const normalizeOptionalText = (value: string) => {
 };
 
 export const getSessionLabel = (user: AuthUser | null) =>
-  user?.nickname || user?.username || user?.email || i18n.t("home.notSignedIn");
+  user?.nickname || user?.username || user?.email || i18n.t("notSignedIn", { ns: "authProvider" });
 
 export const isLoginFormComplete = (form: LoginFormState) =>
   Boolean(sanitizeEmail(form.email) && form.password);
@@ -31,29 +31,29 @@ export const getRegisterFieldErrors = (
   const errors: RegisterFieldErrors = {};
 
   if (!email) {
-    errors.email = i18n.t("validation.emailRequired");
+    errors.email = i18n.t("validationEmailRequired", { ns: "registerForm" });
   } else if (!emailPattern.test(email)) {
-    errors.email = i18n.t("validation.emailInvalid");
+    errors.email = i18n.t("validationEmailInvalid", { ns: "registerForm" });
   }
 
   if (!form.password) {
-    errors.password = i18n.t("validation.passwordRequired");
+    errors.password = i18n.t("validationPasswordRequired", { ns: "registerForm" });
   } else if (form.password.length < 8) {
-    errors.password = i18n.t("validation.passwordLength");
+    errors.password = i18n.t("validationPasswordLength", { ns: "registerForm" });
   } else if (email && form.password.toLowerCase().includes(email)) {
-    errors.password = i18n.t("validation.passwordEmail");
+    errors.password = i18n.t("validationPasswordEmail", { ns: "registerForm" });
   } else if (
     !lowercasePattern.test(form.password) ||
     !uppercasePattern.test(form.password) ||
     !symbolPattern.test(form.password)
   ) {
-    errors.password = i18n.t("validation.passwordCaseSymbol");
+    errors.password = i18n.t("validationPasswordCaseSymbol", { ns: "registerForm" });
   }
 
   if (!form.confirmPassword) {
-    errors.confirmPassword = i18n.t("validation.confirmRequired");
+    errors.confirmPassword = i18n.t("validationConfirmRequired", { ns: "registerForm" });
   } else if (form.confirmPassword !== form.password) {
-    errors.confirmPassword = i18n.t("validation.confirmMismatch");
+    errors.confirmPassword = i18n.t("validationConfirmMismatch", { ns: "registerForm" });
   }
 
   return errors;
@@ -68,4 +68,3 @@ export const getRegisterValidationMessage = (form: RegisterFormState) => {
     null
   );
 };
-

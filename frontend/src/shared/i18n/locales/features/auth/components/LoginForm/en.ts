@@ -1,0 +1,17 @@
+export default {
+  email: "Email",
+  password: "Password",
+  emailPlaceholder: "you@example.com",
+  passwordPlaceholder: "Enter your password",
+  submitLogin: "Sign in",
+  submittingLogin: "Signing in…",
+  invalidLogin: "Enter your email and password to sign in.",
+  loginSuccess: "Signed in successfully.",
+  switchToForgotPassword: "Forgot your password?",
+  switchToResendVerification: "Resend verification email",
+  createInstead: "Need an account?",
+  switchToRegister: "Create account",
+  showPassword: "Show password",
+  hidePassword: "Hide password",
+  backendOffline: "Unable to reach the backend.",
+};

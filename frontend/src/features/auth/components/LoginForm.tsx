@@ -13,7 +13,7 @@ import { Input } from "../../../shared/ui/input";
 import { Label } from "../../../shared/ui/label";
 
 export const LoginForm = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("loginForm");
   const navigate = useNavigate();
   const { backendState, isAuthenticating, signIn } = useAuth();
   const [form, setForm] = useState(initialLoginForm);
@@ -28,7 +28,7 @@ export const LoginForm = () => {
 
     if (!canSubmit) {
       setMessageTone("error");
-      setMessage(t("auth.invalidLogin"));
+      setMessage(t("invalidLogin"));
       return;
     }
 
@@ -41,35 +41,35 @@ export const LoginForm = () => {
     }
 
     setMessageTone("success");
-    setMessage(t("auth.loginSuccess"));
+    setMessage(t("loginSuccess"));
     navigate("/", { replace: true });
   };
 
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
       {message ? <Alert variant={messageTone}>{message}</Alert> : null}
-      {backendState.kind === "offline" ? <Alert variant="error">{backendState.message}</Alert> : null}
+      {backendState.kind === "offline" ? <Alert variant="error">{backendState.message || t("backendOffline")}</Alert> : null}
 
       <div className="space-y-2">
-        <Label htmlFor="login-email">{t("auth.email")}</Label>
+        <Label htmlFor="login-email">{t("email")}</Label>
         <Input
           id="login-email"
           type="email"
           autoComplete="email"
-          placeholder={t("auth.emailPlaceholder")}
+          placeholder={t("emailPlaceholder")}
           value={form.email}
           onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="login-password">{t("auth.password")}</Label>
+        <Label htmlFor="login-password">{t("password")}</Label>
         <div className="relative">
           <Input
             id="login-password"
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
-            placeholder={t("auth.passwordPlaceholder")}
+            placeholder={t("passwordPlaceholder")}
             value={form.password}
             onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
             className="pr-12"
@@ -78,7 +78,7 @@ export const LoginForm = () => {
             type="button"
             className="absolute inset-y-0 right-3 inline-flex items-center text-muted-foreground transition hover:text-foreground"
             onClick={() => setShowPassword((current) => !current)}
-            aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+            aria-label={showPassword ? t("hidePassword") : t("showPassword")}
           >
             {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
@@ -92,25 +92,25 @@ export const LoginForm = () => {
         disabled={!canSubmit || isAuthenticating || backendState.kind === "offline"}
       >
         <LogIn />
-        {isAuthenticating ? t("auth.submittingLogin") : t("auth.submitLogin")}
+        {isAuthenticating ? t("submittingLogin") : t("submitLogin")}
       </Button>
 
       <div className="text-sm text-muted-foreground">
         <Link className="font-medium text-primary hover:underline" to="/forgot-password">
-          {t("auth.switchToForgotPassword")}
+          {t("switchToForgotPassword")}
         </Link>
       </div>
 
       <div className="text-sm text-muted-foreground">
         <Link className="font-medium text-primary hover:underline" to="/resend-verification">
-          {t("auth.switchToResendVerification")}
+          {t("switchToResendVerification")}
         </Link>
       </div>
 
       <div className="text-sm text-muted-foreground">
-        {t("auth.createInstead")}{" "}
+        {t("createInstead")}{" "}
         <Link className="font-medium text-primary hover:underline" to="/register">
-          {t("auth.switchToRegister")}
+          {t("switchToRegister")}
         </Link>
       </div>
     </form>

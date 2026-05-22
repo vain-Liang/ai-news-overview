@@ -27,6 +27,20 @@ def test_valid_settings() -> None:
     assert settings.llm_provider == "deepseek"
 
 
+def test_release_debug_env_is_coerced_to_false(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DEBUG", "release")
+
+    settings = Settings(
+        auth_secret="test-secret",
+        postgres_host="localhost",
+        postgres_user="user",
+        postgres_password="pass",
+        postgres_db="db",
+    )
+
+    assert settings.debug is False
+
+
 def test_openai_provider_can_be_selected() -> None:
     settings = Settings(
         auth_secret="test-secret",
@@ -92,6 +106,25 @@ def test_mail_tls_and_ssl_cannot_both_be_enabled() -> None:
             smtp_use_tls=True,
             smtp_use_ssl=True,
         )
+
+
+def test_smtp_port_465_is_normalized_to_ssl() -> None:
+    settings = Settings(
+        auth_secret="test-secret",
+        postgres_host="localhost",
+        postgres_user="user",
+        postgres_password="pass",
+        postgres_db="db",
+        mail_enabled=True,
+        smtp_host="smtp.example.com",
+        mail_sender_email="noreply@example.com",
+        smtp_port=465,
+        smtp_use_tls=True,
+        smtp_use_ssl=False,
+    )
+
+    assert settings.smtp_use_tls is False
+    assert settings.smtp_use_ssl is True
 
 
 def test_admin_api_prefix_is_normalized() -> None:

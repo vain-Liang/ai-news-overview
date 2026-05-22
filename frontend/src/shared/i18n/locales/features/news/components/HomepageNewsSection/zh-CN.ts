@@ -1,0 +1,27 @@
+export default {
+  badge: "最新内容",
+  title: "按来源查看最新已入库新闻",
+  description:
+    "浏览已入库的最新首页标题，并按来源分组直接打开新闻原文。",
+  refresh: "刷新标题",
+  loading: "正在加载最新新闻…",
+  loadingDescription: "正在从后端读取已保存的新闻元数据。",
+  error: "暂时无法加载首页新闻。",
+  empty: "当前还没有已入库的首页新闻，请先执行一次新的抓取。",
+  sourceCount_one: "{{count}} 个来源",
+  sourceCount_other: "{{count}} 个来源",
+  articleCount_one: "{{count}} 条标题",
+  articleCount_other: "{{count}} 条标题",
+  groupCount_one: "{{count}} 条",
+  groupCount_other: "{{count}} 条",
+  groupDescription: "点击标题可在新标签页中打开新闻原文。",
+  publishedAt: "发布时间",
+  crawledAt: "抓取时间",
+  sourceLabels: {
+    xinhua: "新华社",
+    thepaper: "澎湃新闻",
+    peoples: "人民网",
+    ifeng: "凤凰网",
+    qqnews: "腾讯新闻",
+  },
+};

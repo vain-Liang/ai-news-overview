@@ -11,7 +11,7 @@ import { Input } from "../../../shared/ui/input";
 import { Label } from "../../../shared/ui/label";
 
 export const ResetPasswordForm = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("resetPasswordForm");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [token, setToken] = useState(searchParams.get("token") ?? "");
@@ -25,19 +25,19 @@ export const ResetPasswordForm = () => {
 
   const validationMessage = useMemo(() => {
     if (!token.trim()) {
-      return t("auth.resetPasswordTokenRequired");
+      return t("validationTokenRequired");
     }
     if (!password) {
-      return t("validation.passwordRequired");
+      return t("validationPasswordRequired");
     }
     if (password.length < 8) {
-      return t("validation.passwordLength");
+      return t("validationPasswordLength");
     }
     if (!confirmPassword) {
-      return t("validation.confirmRequired");
+      return t("validationConfirmRequired");
     }
     if (confirmPassword !== password) {
-      return t("validation.confirmMismatch");
+      return t("validationConfirmMismatch");
     }
     return null;
   }, [confirmPassword, password, t, token]);
@@ -55,12 +55,12 @@ export const ResetPasswordForm = () => {
     try {
       await confirmPasswordReset({ token, password });
       setMessageTone("success");
-      setMessage(t("auth.resetPasswordSuccess"));
+      setMessage(t("success"));
       navigate("/login", { replace: true });
     } catch (error) {
       setMessageTone("error");
       setMessage(
-        error instanceof Error ? error.message : t("backend.offline"),
+        error instanceof Error ? error.message : t("backendOffline"),
       );
     } finally {
       setIsSubmitting(false);
@@ -70,26 +70,26 @@ export const ResetPasswordForm = () => {
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
       {message ? <Alert variant={messageTone}>{message}</Alert> : null}
-      <Alert>{t("auth.resetPasswordHint")}</Alert>
+      <Alert>{t("hint")}</Alert>
 
       <div className="space-y-2">
-        <Label htmlFor="reset-password-token">{t("auth.resetPasswordToken")}</Label>
+        <Label htmlFor="reset-password-token">{t("token")}</Label>
         <Input
           id="reset-password-token"
-          placeholder={t("auth.resetPasswordTokenPlaceholder")}
+          placeholder={t("tokenPlaceholder")}
           value={token}
           onChange={(event) => setToken(event.target.value)}
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="reset-password">{t("auth.newPassword")}</Label>
+        <Label htmlFor="reset-password">{t("newPassword")}</Label>
         <div className="relative">
           <Input
             id="reset-password"
             type={showPassword ? "text" : "password"}
             autoComplete="new-password"
-            placeholder={t("auth.passwordPlaceholder")}
+            placeholder={t("passwordPlaceholder")}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             className="pr-12"
@@ -98,7 +98,7 @@ export const ResetPasswordForm = () => {
             type="button"
             className="absolute inset-y-0 right-3 inline-flex items-center text-muted-foreground transition hover:text-foreground"
             onClick={() => setShowPassword((current) => !current)}
-            aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+            aria-label={showPassword ? t("hidePassword") : t("showPassword")}
           >
             {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
@@ -106,13 +106,13 @@ export const ResetPasswordForm = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="reset-password-confirm">{t("auth.confirmPassword")}</Label>
+        <Label htmlFor="reset-password-confirm">{t("confirmPassword")}</Label>
         <div className="relative">
           <Input
             id="reset-password-confirm"
             type={showConfirmPassword ? "text" : "password"}
             autoComplete="new-password"
-            placeholder={t("auth.confirmPasswordPlaceholder")}
+            placeholder={t("confirmPasswordPlaceholder")}
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
             className="pr-12"
@@ -121,7 +121,7 @@ export const ResetPasswordForm = () => {
             type="button"
             className="absolute inset-y-0 right-3 inline-flex items-center text-muted-foreground transition hover:text-foreground"
             onClick={() => setShowConfirmPassword((current) => !current)}
-            aria-label={showConfirmPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+            aria-label={showConfirmPassword ? t("hidePassword") : t("showPassword")}
           >
             {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
@@ -130,12 +130,12 @@ export const ResetPasswordForm = () => {
 
       <Button type="submit" size="lg" className="w-full" disabled={Boolean(validationMessage) || isSubmitting}>
         <KeyRound />
-        {isSubmitting ? t("auth.submittingResetPassword") : t("auth.submitResetPassword")}
+        {isSubmitting ? t("submitting") : t("submit")}
       </Button>
 
       <div className="text-sm text-muted-foreground">
         <Link className="font-medium text-primary hover:underline" to="/login">
-          {t("auth.backToLogin")}
+          {t("backToLogin")}
         </Link>
       </div>
     </form>

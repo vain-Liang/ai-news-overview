@@ -4,14 +4,11 @@ import { AuthLayout } from "../features/auth/components/AuthLayout";
 import { VerifyAccountCard } from "../features/auth/components/VerifyAccountCard";
 
 export const VerifyAccountPage = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("verifyAccountPage");
 
   return (
     <AuthLayout
-      eyebrow={t("auth.verifyAccountTitle")}
-      title={t("auth.verifyAccountTitle")}
-      description={t("auth.verifyAccountDescription")}
-      footer={<div className="text-center text-sm text-muted-foreground">{t("auth.verifyAccountFooter")}</div>}
+      title={t("title")}
     >
       <VerifyAccountCard />
     </AuthLayout>

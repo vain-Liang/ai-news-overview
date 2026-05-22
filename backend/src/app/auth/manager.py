@@ -10,7 +10,7 @@ import jwt
 from fastapi_users import BaseUserManager, InvalidPasswordException, UUIDIDMixin, exceptions
 from fastapi_users.jwt import decode_jwt, generate_jwt
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase  # noqa: TC002
-from sqlalchemy import func, select
+from sqlalchemy import func, literal, select
 from zxcvbn import zxcvbn
 
 from app.core.config import get_settings

@@ -9,7 +9,7 @@ from app.core.config import get_settings
 def _create_celery_app() -> Celery:
     settings = get_settings()
     app = Celery(
-        "ai_news_review",
+        settings.app_name,
         broker=settings.celery_broker_url,
         backend=settings.celery_result_backend,
         include=["app.tasks.crawl_jobs", "app.tasks.rag_jobs", "app.tasks.mail_jobs"],
@@ -23,6 +23,9 @@ def _create_celery_app() -> Celery:
         task_track_started=True,
         task_acks_late=True,
         worker_prefetch_multiplier=1,
+        # RabbitMQ 4.3+ rejects the transient non-exclusive pidbox queues used
+        # by Celery remote control, so keep workers on the durable task queue path.
+        worker_enable_remote_control=False,
         beat_schedule={
             "retrieve-news-twice-daily": {
                 "task": "app.tasks.crawl_jobs.run_retrieval_task",

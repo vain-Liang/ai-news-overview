@@ -44,6 +44,5 @@ def get_mail_connection_config() -> ConnectionConfig:
         MAIL_SSL_TLS=settings.smtp_use_ssl,
         USE_CREDENTIALS=bool(settings.smtp_username),
         VALIDATE_CERTS=settings.smtp_validate_certs,
-        TIMEOUT=int(settings.smtp_timeout_seconds),
         SUPPRESS_SEND=0,
     )

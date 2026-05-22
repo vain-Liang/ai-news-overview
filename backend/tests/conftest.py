@@ -84,7 +84,9 @@ async def _reset_public_schema(database_dsn: str) -> None:
 async def _truncate_auth_tables(database_dsn: str) -> None:
     connection = await asyncpg.connect(database_dsn)
     try:
-        await connection.execute('TRUNCATE TABLE news_article, access_token, "user" RESTART IDENTITY CASCADE')
+        await connection.execute(
+            'TRUNCATE TABLE workflow_news_summary, news_article, access_token, "user" RESTART IDENTITY CASCADE'
+        )
     finally:
         await connection.close()
 

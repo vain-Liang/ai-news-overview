@@ -16,7 +16,7 @@ import { Input } from "../../../shared/ui/input";
 import { Label } from "../../../shared/ui/label";
 
 export const RegisterForm = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("registerForm");
   const navigate = useNavigate();
   const { backendState, isAuthenticating, register } = useAuth();
   const [form, setForm] = useState(initialRegisterForm);
@@ -51,7 +51,7 @@ export const RegisterForm = () => {
     }
 
     setMessageTone("success");
-    setMessage(t("auth.registerSuccess"));
+    setMessage(t("registerSuccess"));
     navigate("/", { replace: true });
   };
 
@@ -61,15 +61,15 @@ export const RegisterForm = () => {
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
       {message ? <Alert variant={messageTone}>{message}</Alert> : null}
-      {backendState.kind === "offline" ? <Alert variant="error">{backendState.message}</Alert> : null}
+      {backendState.kind === "offline" ? <Alert variant="error">{backendState.message || t("backendOffline")}</Alert> : null}
 
       <div className="space-y-2">
-        <Label htmlFor="register-email">{t("auth.email")}</Label>
+        <Label htmlFor="register-email">{t("email")}</Label>
         <Input
           id="register-email"
           type="email"
           autoComplete="email"
-          placeholder={t("auth.emailPlaceholder")}
+          placeholder={t("emailPlaceholder")}
           value={form.email}
           onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
         />
@@ -78,39 +78,39 @@ export const RegisterForm = () => {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="register-username">{t("auth.username")}</Label>
+          <Label htmlFor="register-username">{t("username")}</Label>
           <Input
             id="register-username"
             autoComplete="username"
-            placeholder={t("auth.usernamePlaceholder")}
+            placeholder={t("usernamePlaceholder")}
             value={form.username}
             onChange={(event) => setForm((current) => ({ ...current, username: event.target.value }))}
           />
           <p className="text-xs text-muted-foreground">
-            {t("common.optional")} · {t("auth.usernameImmutableHint")}
+            {t("optional")} · {t("usernameImmutableHint")}
           </p>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="register-nickname">{t("auth.nickname")}</Label>
+          <Label htmlFor="register-nickname">{t("nickname")}</Label>
           <Input
             id="register-nickname"
             autoComplete="nickname"
-            placeholder={t("auth.nicknamePlaceholder")}
+            placeholder={t("nicknamePlaceholder")}
             value={form.nickname}
             onChange={(event) => setForm((current) => ({ ...current, nickname: event.target.value }))}
           />
-          <p className="text-xs text-muted-foreground">{t("common.optional")}</p>
+          <p className="text-xs text-muted-foreground">{t("optional")}</p>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="register-password">{t("auth.password")}</Label>
+        <Label htmlFor="register-password">{t("password")}</Label>
         <div className="relative">
           <Input
             id="register-password"
             type={showPassword ? "text" : "password"}
             autoComplete="new-password"
-            placeholder={t("auth.passwordPlaceholder")}
+            placeholder={t("passwordPlaceholder")}
             value={form.password}
             onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
             className="pr-12"
@@ -119,23 +119,23 @@ export const RegisterForm = () => {
             type="button"
             className="absolute inset-y-0 right-3 inline-flex items-center text-muted-foreground transition hover:text-foreground"
             onClick={() => setShowPassword((current) => !current)}
-            aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+            aria-label={showPassword ? t("hidePassword") : t("showPassword")}
           >
             {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
         </div>
-        <p className="text-xs text-muted-foreground">{t("auth.passwordRuleHint")}</p>
+        <p className="text-xs text-muted-foreground">{t("passwordRuleHint")}</p>
         {renderError(fieldErrors.password)}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="register-confirm-password">{t("auth.confirmPassword")}</Label>
+        <Label htmlFor="register-confirm-password">{t("confirmPassword")}</Label>
         <div className="relative">
           <Input
             id="register-confirm-password"
             type={showConfirmPassword ? "text" : "password"}
             autoComplete="new-password"
-            placeholder={t("auth.confirmPasswordPlaceholder")}
+            placeholder={t("confirmPasswordPlaceholder")}
             value={form.confirmPassword}
             onChange={(event) =>
               setForm((current) => ({ ...current, confirmPassword: event.target.value }))
@@ -146,7 +146,7 @@ export const RegisterForm = () => {
             type="button"
             className="absolute inset-y-0 right-3 inline-flex items-center text-muted-foreground transition hover:text-foreground"
             onClick={() => setShowConfirmPassword((current) => !current)}
-            aria-label={showConfirmPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+            aria-label={showConfirmPassword ? t("hidePassword") : t("showPassword")}
           >
             {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
@@ -154,7 +154,7 @@ export const RegisterForm = () => {
         {renderError(fieldErrors.confirmPassword)}
       </div>
 
-      <Alert>{t("auth.validationHint")}</Alert>
+      <Alert>{t("validationHint")}</Alert>
 
       <Button
         type="submit"
@@ -163,13 +163,13 @@ export const RegisterForm = () => {
         disabled={Boolean(validationMessage) || isAuthenticating || backendState.kind === "offline"}
       >
         <UserPlus />
-        {isAuthenticating ? t("auth.submittingRegister") : t("auth.submitRegister")}
+        {isAuthenticating ? t("submittingRegister") : t("submitRegister")}
       </Button>
 
       <div className="text-sm text-muted-foreground">
-        {t("auth.loginInstead")}{" "}
+        {t("loginInstead")}{" "}
         <Link className="font-medium text-primary hover:underline" to="/login">
-          {t("auth.switchToLogin")}
+          {t("switchToLogin")}
         </Link>
       </div>
     </form>

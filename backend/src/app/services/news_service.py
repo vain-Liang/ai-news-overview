@@ -56,13 +56,13 @@ def _resolve_store(persist_dir: str | None) -> VectorStoreBase:
     return build_vector_store(persist_dir=persist_dir)
 
 
-async def ingest_homepage_news(
+async def ingest_homepage_news_with_articles(
     session: AsyncSession,
     *,
     sources: list[str] | None = None,
     bypass_cache: bool = True,
     persist_dir: str | None = None,
-) -> NewsIngestionResult:
+) -> tuple[NewsIngestionResult, list[NewsArticle]]:
     articles = await crawl_all_sites(sources=sources, bypass_cache=bypass_cache)
     metadata_stored_count = await upsert_news_metadata(session, articles)
     store = _resolve_store(persist_dir)
@@ -72,12 +72,31 @@ async def ingest_homepage_news(
     for article in articles:
         by_source[article.source] = by_source.get(article.source, 0) + 1
 
-    return NewsIngestionResult(
-        crawled_count=len(articles),
-        metadata_stored_count=metadata_stored_count,
-        vector_stored_count=vector_stored_count,
-        by_source=by_source,
+    return (
+        NewsIngestionResult(
+            crawled_count=len(articles),
+            metadata_stored_count=metadata_stored_count,
+            vector_stored_count=vector_stored_count,
+            by_source=by_source,
+        ),
+        articles,
     )
+
+
+async def ingest_homepage_news(
+    session: AsyncSession,
+    *,
+    sources: list[str] | None = None,
+    bypass_cache: bool = True,
+    persist_dir: str | None = None,
+) -> NewsIngestionResult:
+    result, _articles = await ingest_homepage_news_with_articles(
+        session,
+        sources=sources,
+        bypass_cache=bypass_cache,
+        persist_dir=persist_dir,
+    )
+    return result
 
 
 async def semantic_search_news(

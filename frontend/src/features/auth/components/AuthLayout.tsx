@@ -1,61 +1,54 @@
 import type { PropsWithChildren, ReactNode } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 
-import { Badge } from "../../../shared/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../shared/ui/card";
-import { LanguageSwitcher } from "../../../shared/ui/language-switcher";
-import { ThemeToggle } from "../../../shared/ui/theme-toggle";
+import { AppShell } from "../../../shared/ui/app-shell";
+import { Button } from "../../../shared/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../shared/ui/card";
 
 type AuthLayoutProps = PropsWithChildren<{
-  eyebrow: string;
   title: string;
-  description: string;
   footer?: ReactNode;
 }>;
 
 export const AuthLayout = ({
-  eyebrow,
   title,
-  description,
   footer,
   children,
 }: AuthLayoutProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("authLayout");
+  const { pathname } = useLocation();
 
   return (
-    <main className="min-h-screen bg-background px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
-        <header className="flex flex-col gap-4 rounded-3xl border border-border/60 bg-background/80 p-4 shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between">
-          <Link to="/" className="inline-flex items-center gap-3 text-sm font-semibold tracking-tight text-foreground">
-            <span className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">AI</span>
-            <span>{t("common.appName")}</span>
-          </Link>
-          <div className="flex flex-wrap items-center gap-3">
-            <LanguageSwitcher />
-            <ThemeToggle />
-          </div>
-        </header>
-
-        <section className="mx-auto flex w-full max-w-xl">
-          <Card className="w-full">
-            <CardHeader className="space-y-4">
-              <Badge className="w-fit" variant="default">
-                {eyebrow}
-              </Badge>
-              <div className="space-y-2">
-                <CardTitle className="text-3xl sm:text-4xl">{title}</CardTitle>
-                <CardDescription className="text-base">{description}</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">{children}</CardContent>
-          </Card>
-        </section>
-
-        {footer ? (
-          <div className="mx-auto w-full max-w-xl text-center">{footer}</div>
-        ) : null}
-      </div>
-    </main>
+    <AppShell
+      title={title}
+      actions={
+        <>
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/">{t("backHome")}</Link>
+          </Button>
+          {pathname !== "/login" ? (
+            <Button asChild variant="outline" size="sm">
+              <Link to="/login">{t("signIn")}</Link>
+            </Button>
+          ) : null}
+          {pathname !== "/register" ? (
+            <Button asChild size="sm">
+              <Link to="/register">{t("createAccount")}</Link>
+            </Button>
+          ) : null}
+        </>
+      }
+    >
+      <section className="mx-auto flex w-full max-w-xl">
+        <Card className="w-full">
+          <CardHeader className="space-y-4">
+            <CardTitle className="text-3xl sm:text-4xl">{title}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">{children}</CardContent>
+        </Card>
+      </section>
+      {footer ? <div className="mx-auto w-full max-w-xl text-center">{footer}</div> : null}
+    </AppShell>
   );
 };

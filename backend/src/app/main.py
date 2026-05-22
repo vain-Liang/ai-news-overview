@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.router import api_router
-from app.api.v1.routes.admin import admin_router
+from app.api.v1.routes.admin import admin_router, admin_workflow_router
 from app.core.config import get_settings
 from app.core.exceptions import AppError
 from app.core.logging import request_id_ctx, setup_logging
@@ -103,6 +103,7 @@ def create_app() -> FastAPI:
     _register_exception_handlers(app)
     app.include_router(api_router)
     app.include_router(admin_router, prefix=settings.admin_api_prefix_path)
+    app.include_router(admin_workflow_router, prefix=settings.admin_api_prefix_path)
 
     logger.info(
         "Application '%s' started (debug=%s, log_level=%s)",

@@ -32,14 +32,14 @@ const toMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("authProvider");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isRefreshingProfile, setIsRefreshingProfile] = useState(false);
   const [backendState, setBackendState] = useState<BackendState>({
     kind: "checking",
-    message: t("backend.checking"),
+    message: t("checking"),
     runtime: null,
   });
 
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       const runtime = await fetchRuntimeStatus();
       setBackendState({
         kind: "online",
-        message: t("backend.online"),
+        message: t("online"),
         runtime,
       });
       return;
@@ -57,13 +57,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         const fallback = await healthcheck();
         setBackendState({
           kind: fallback.status === "ok" ? "online" : "checking",
-          message: t("backend.online"),
+          message: t("online"),
           runtime: null,
         });
       } catch (error) {
         setBackendState({
           kind: "offline",
-          message: toMessage(error, t("backend.offline")),
+          message: toMessage(error, t("offline")),
           runtime: null,
         });
       }
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       return { ok: true };
     } catch {
       setUser(null);
-      return { ok: false, message: t("backend.restoredSessionExpired") };
+      return { ok: false, message: t("restoredSessionExpired") };
     } finally {
       setIsRefreshingProfile(false);
     }
@@ -113,7 +113,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       } catch (error) {
         return {
           ok: false,
-          message: toMessage(error, t("backend.offline")),
+          message: toMessage(error, t("offline")),
         };
       } finally {
         setIsAuthenticating(false);
@@ -131,7 +131,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       } catch (error) {
         return {
           ok: false,
-          message: toMessage(error, t("backend.offline")),
+          message: toMessage(error, t("offline")),
         };
       } finally {
         setIsAuthenticating(false);
@@ -142,7 +142,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
   const refreshProfile = useCallback(async (): Promise<AuthActionResult> => {
     if (!user) {
-      return { ok: false, message: t("home.notSignedIn") };
+      return { ok: false, message: t("notSignedIn") };
     }
     return restoreSession();
   }, [restoreSession, t, user]);
@@ -150,7 +150,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const updateProfile = useCallback(
     async (payload: ProfileUpdatePayload): Promise<AuthActionResult> => {
       if (!user) {
-        return { ok: false, message: t("home.notSignedIn") };
+      return { ok: false, message: t("notSignedIn") };
       }
 
       setIsRefreshingProfile(true);
@@ -161,17 +161,17 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         if (response.email_change_requested && response.user.pending_email) {
           return {
             ok: true,
-            message: t("profile.emailChangeVerificationSent", {
+            message: t("emailChangeVerificationSent", {
               email: response.user.pending_email,
             }),
           };
         }
 
-        return { ok: true, message: t("profile.updateSuccess") };
+        return { ok: true, message: t("updateSuccess") };
       } catch (error) {
         return {
           ok: false,
-          message: toMessage(error, t("backend.offline")),
+          message: toMessage(error, t("offline")),
         };
       } finally {
         setIsRefreshingProfile(false);

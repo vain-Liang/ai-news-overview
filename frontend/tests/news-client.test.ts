@@ -29,7 +29,7 @@ test("fetchHomepageNews requests the homepage endpoint with per-source limit", a
   assert.equal(String(calls[0]?.input), "/api/news/homepage?per_source=6");
 });
 
-test("ingestNews sends a bearer token for jwt-authenticated requests", async () => {
+test("ingestNews sends the payload with cookie credentials", async () => {
   const calls: FetchCall[] = [];
 
   globalThis.fetch = async (input, init) => {
@@ -42,10 +42,7 @@ test("ingestNews sends a bearer token for jwt-authenticated requests", async () 
     });
   };
 
-  const response = await ingestNews(
-    { sources: ["xinhua", "ifeng"] },
-    { authMethod: "jwt", token: "jwt-token" },
-  );
+  const response = await ingestNews({ sources: ["xinhua", "ifeng"] });
 
   assert.equal(String(calls[0]?.input), "/api/news/ingest");
   assert.equal(calls[0]?.init?.method, "POST");
@@ -55,9 +52,9 @@ test("ingestNews sends a bearer token for jwt-authenticated requests", async () 
   });
   assert.deepEqual(calls[0]?.init?.headers, {
     Accept: "application/json",
-    Authorization: "Bearer jwt-token",
     "Content-Type": "application/json",
   });
+  assert.equal(calls[0]?.init?.credentials, "include");
   assert.equal(response.crawled_count, 3);
 });
 
@@ -74,10 +71,7 @@ test("ingestNews uses cookie credentials for cookie-authenticated requests", asy
     });
   };
 
-  await ingestNews(
-    { sources: ["qqnews"], bypassCache: false },
-    { authMethod: "cookie", token: null },
-  );
+  await ingestNews({ sources: ["qqnews"], bypassCache: false });
 
   assert.equal(String(calls[0]?.input), "/api/news/ingest");
   assert.equal(calls[0]?.init?.credentials, "include");

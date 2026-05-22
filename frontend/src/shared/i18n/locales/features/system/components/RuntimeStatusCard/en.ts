@@ -1,0 +1,15 @@
+export default {
+  title: "Platform availability",
+  description: "A simplified service status view for administrators.",
+  online: "Operational",
+  offline: "Unavailable",
+  checking: "Checking",
+  summary: "Current status",
+  response: "Service response",
+  healthyTitle: "Healthy platform",
+  healthyDescription: "The API is reachable and the workspace should be available to users.",
+  unavailableTitle: "Service interruption",
+  unavailableDescription: "The frontend cannot reach the backend right now. User actions that depend on live data may fail until service is restored.",
+  pendingTitle: "Status check in progress",
+  pendingDescription: "The frontend is still confirming whether the backend is reachable.",
+};

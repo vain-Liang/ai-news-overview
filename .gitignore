@@ -81,3 +81,6 @@ http-client.private.env.json
 .codex/skills/.system/**
 !.codex/prompts/
 !.codex/prompts/**
+
+# oh-my-claude
+.omc/

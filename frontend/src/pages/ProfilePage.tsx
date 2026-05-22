@@ -9,16 +9,15 @@ import { UserProfileCard } from "../features/auth/components/UserProfileCard";
 import { useAuth } from "../features/auth/hooks/useAuth";
 import { normalizeOptionalText, sanitizeEmail } from "../features/auth/lib/auth-utils";
 import { Alert } from "../shared/ui/alert";
+import { AppShell } from "../shared/ui/app-shell";
 import { Badge } from "../shared/ui/badge";
 import { Button } from "../shared/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../shared/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../shared/ui/card";
 import { Input } from "../shared/ui/input";
 import { Label } from "../shared/ui/label";
-import { LanguageSwitcher } from "../shared/ui/language-switcher";
-import { ThemeToggle } from "../shared/ui/theme-toggle";
 
 export const ProfilePage = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("profilePage");
   const {
     isAuthenticated,
     isRefreshingProfile,
@@ -44,17 +43,17 @@ export const ProfilePage = () => {
 
   const profileValidationMessage = useMemo(() => {
     if (!sanitizeEmail(email)) {
-      return t("validation.emailRequired");
+      return t("validationEmailRequired");
     }
 
     const normalizedEmail = sanitizeEmail(email);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-      return t("validation.emailInvalid");
+      return t("validationEmailInvalid");
     }
 
     const normalizedNickname = normalizeOptionalText(nickname);
     if (normalizedNickname && normalizedNickname.length > 100) {
-      return t("profile.nicknameTooLong");
+      return t("nicknameTooLong");
     }
 
     return null;
@@ -80,7 +79,7 @@ export const ProfilePage = () => {
 
     if (result.ok) {
       setProfileTone("success");
-      setProfileMessage(result.message || t("profile.updateSuccess"));
+      setProfileMessage(result.message || t("updateSuccess"));
       return;
     }
 
@@ -91,7 +90,7 @@ export const ProfilePage = () => {
   const handlePasswordReset = async () => {
     if (!user?.email) {
       setResetTone("error");
-      setResetMessage(t("validation.emailRequired"));
+      setResetMessage(t("validationEmailRequired"));
       return;
     }
 
@@ -101,61 +100,34 @@ export const ProfilePage = () => {
     try {
       await requestPasswordReset(user.email);
       setResetTone("success");
-      setResetMessage(t("profile.resetPasswordSuccess"));
+      setResetMessage(t("resetPasswordSuccess"));
     } catch (error) {
       setResetTone("error");
-      setResetMessage(error instanceof Error ? error.message : t("backend.offline"));
+      setResetMessage(error instanceof Error ? error.message : "Unable to reach the backend.");
     } finally {
       setIsRequestingReset(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-background px-4 py-6 sm:px-6 lg:px-8">
+    <AppShell
+      actions={
+        <>
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/news">News</Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/">
+              <ArrowLeft className="size-4" />
+              Home
+            </Link>
+          </Button>
+          {user ? <UserMenu onSignOut={() => void signOut()} user={user} /> : null}
+        </>
+      }
+    >
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
-        <header className="relative z-40 flex flex-col gap-4 rounded-3xl border border-border/60 bg-background/80 p-4 shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">AI</span>
-            <div>
-              <div className="font-semibold tracking-tight">{t("common.appName")}</div>
-              <div className="text-sm text-muted-foreground">{t("profile.pageEyebrow")}</div>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <LanguageSwitcher />
-            <ThemeToggle />
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/news">{t("nav.news")}</Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/">
-                <ArrowLeft className="size-4" />
-                {t("nav.home")}
-              </Link>
-            </Button>
-            {user ? <UserMenu onSignOut={() => void signOut()} user={user} /> : null}
-          </div>
-        </header>
-
         <section className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
-          <Card className="overflow-hidden border-primary/10 bg-gradient-to-br from-primary/8 via-background to-background">
-            <CardHeader className="space-y-4">
-              <Badge className="w-fit">
-                <ShieldCheck className="size-3.5" />
-                {t("profile.badge")}
-              </Badge>
-              <CardTitle className="max-w-3xl text-3xl sm:text-4xl">{t("profile.pageTitle")}</CardTitle>
-              <CardDescription className="max-w-3xl text-base sm:text-lg">
-                {t("profile.pageDescription")}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="rounded-2xl border border-border/60 bg-background/70 p-4 text-sm text-muted-foreground">
-                <div className="font-medium text-foreground">{t("profile.securityTitle")}</div>
-                <p className="mt-2">{t("profile.securityDescription")}</p>
-              </div>
-            </CardContent>
-          </Card>
 
           <UserProfileCard
             isAuthenticated={isAuthenticated}
@@ -169,34 +141,33 @@ export const ProfilePage = () => {
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <Card>
             <CardHeader>
-              <CardTitle>{t("profile.editTitle")}</CardTitle>
-              <CardDescription>{t("profile.editDescription")}</CardDescription>
+              <CardTitle>{t("editTitle")}</CardTitle>
             </CardHeader>
             <CardContent>
               <form className="space-y-5" onSubmit={handleProfileSubmit}>
-                {profileMessage ? <Alert variant={profileTone}>{profileMessage}</Alert> : null}
-                {user?.pending_email ? (
-                  <Alert>
-                    <div className="space-y-1">
-                      <div className="font-medium">{t("profile.pendingEmailTitle")}</div>
-                      <div>{t("profile.pendingEmailDescription", { email: user.pending_email })}</div>
+              {profileMessage ? <Alert variant={profileTone}>{profileMessage}</Alert> : null}
+              {user?.pending_email ? (
+                <Alert>
+                  <div className="space-y-1">
+                      <div className="font-medium">{t("pendingEmailTitle")}</div>
+                      <div>{t("pendingEmailDescription", { email: user.pending_email })}</div>
                     </div>
                   </Alert>
                 ) : null}
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="profile-email">{t("home.email")}</Label>
+                    <Label htmlFor="profile-email">{t("fieldEmail")}</Label>
                     <Input
                       id="profile-email"
                       type="email"
                       autoComplete="email"
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
-                      placeholder={t("auth.emailPlaceholder")}
+                      placeholder="you@example.com"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="profile-username">{t("home.username")}</Label>
+                    <Label htmlFor="profile-username">{t("fieldUsername")}</Label>
                     <Input
                       id="profile-username"
                       value={user?.username ?? ""}
@@ -205,12 +176,12 @@ export const ProfilePage = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="profile-nickname">{t("home.nickname")}</Label>
+                    <Label htmlFor="profile-nickname">{t("fieldNickname")}</Label>
                     <Input
                       id="profile-nickname"
                       value={nickname}
                       onChange={(event) => setNickname(event.target.value)}
-                      placeholder={t("auth.nicknamePlaceholder")}
+                      placeholder="Morning Briefing"
                     />
                   </div>
                 </div>
@@ -219,7 +190,7 @@ export const ProfilePage = () => {
                     type="submit"
                     disabled={Boolean(profileValidationMessage) || !hasProfileChanges || isSavingProfile}
                   >
-                    {isSavingProfile ? t("profile.saving") : t("profile.saveChanges")}
+                    {isSavingProfile ? t("saving") : t("saveChanges")}
                   </Button>
                   <Button
                     type="button"
@@ -231,7 +202,7 @@ export const ProfilePage = () => {
                     }}
                     disabled={isSavingProfile}
                   >
-                    {t("profile.resetForm")}
+                    {t("resetForm")}
                   </Button>
                 </div>
               </form>
@@ -240,17 +211,16 @@ export const ProfilePage = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>{t("profile.resetPasswordTitle")}</CardTitle>
-              <CardDescription>{t("profile.resetPasswordDescription")}</CardDescription>
+              <CardTitle>{t("resetPasswordTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {resetMessage ? <Alert variant={resetTone}>{resetMessage}</Alert> : null}
               <div className="rounded-2xl border border-border/60 bg-background/70 p-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2 font-medium text-foreground">
                   <Mail className="size-4" />
-                  {user?.email ?? t("home.notSignedIn")}
+                  {user?.email ?? t("notSignedIn")}
                 </div>
-                <p className="mt-2">{t("profile.resetPasswordHint")}</p>
+                <p className="mt-2">{t("resetPasswordHint")}</p>
               </div>
               <Button
                 type="button"
@@ -258,12 +228,12 @@ export const ProfilePage = () => {
                 onClick={() => void handlePasswordReset()}
                 disabled={!user?.email || isRequestingReset}
               >
-                {isRequestingReset ? t("profile.requestingReset") : t("profile.sendResetInstructions")}
+                {isRequestingReset ? t("requestingReset") : t("sendResetInstructions")}
               </Button>
             </CardContent>
           </Card>
         </section>
       </div>
-    </main>
+    </AppShell>
   );
 };

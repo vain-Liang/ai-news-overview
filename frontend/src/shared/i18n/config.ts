@@ -1,7 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
-import { resources } from "./resources.ts";
+import { namespaces, resources } from "./registry.ts";
 
 export type AppLanguage = "en" | "zh-CN";
 
@@ -35,6 +35,8 @@ const initialLanguage = resolveInitialLanguage(
 void i18n.use(initReactI18next).init({
   lng: initialLanguage,
   fallbackLng: "en",
+  defaultNS: "appShell",
+  ns: [...namespaces],
   resources,
   interpolation: {
     escapeValue: false,

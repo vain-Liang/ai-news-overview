@@ -20,7 +20,7 @@ type UserMenuProps = {
 };
 
 export const UserMenu = ({ onSignOut, user }: UserMenuProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("userMenu");
   const initials = (user.nickname || user.username || user.email || "AI")
     .slice(0, 2)
     .toUpperCase();
@@ -30,7 +30,7 @@ export const UserMenu = ({ onSignOut, user }: UserMenuProps) => {
       <Link
         to="/me"
         className="flex items-center gap-2 rounded-full border border-border/60 bg-background/80 px-2 py-1.5 transition hover:border-primary/40 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
-        aria-label={t("profile.openProfile")}
+        aria-label={t("openProfile")}
       >
         <Avatar className="size-9 rounded-2xl">
           <AvatarFallback>{initials}</AvatarFallback>
@@ -45,34 +45,33 @@ export const UserMenu = ({ onSignOut, user }: UserMenuProps) => {
         <div className="rounded-2xl border border-border/60 bg-background/95 p-4 shadow-2xl backdrop-blur">
           <div className="space-y-4">
             <div>
-              <div className="text-base font-semibold text-foreground">{t("profile.quickMenuTitle")}</div>
-              <div className="text-sm text-muted-foreground">{t("profile.quickMenuDescription")}</div>
+              <div className="text-base font-semibold text-foreground">{t("quickMenuTitle")}</div>
             </div>
 
             <div className="grid gap-3">
-              <MenuField label={t("home.username")} value={user.username || "—"} />
-              <MenuField label={t("home.email")} value={user.email} />
-              <MenuField label={t("home.nickname")} value={user.nickname || "—"} />
+              <MenuField label={t("username")} value={user.username || "—"} />
+              <MenuField label={t("email")} value={user.email} />
+              <MenuField label={t("nickname")} value={user.nickname || "—"} />
             </div>
 
             <div className="flex flex-wrap gap-2">
               <Button asChild size="sm" className="flex-1">
                 <Link to="/me">
                   <Settings className="size-4" />
-                  {t("profile.editProfile")}
+                  {t("editProfile")}
                 </Link>
               </Button>
               {user.is_superuser ? (
                 <Button asChild variant="outline" size="sm" className="flex-1">
                   <Link to="/admin">
                     <ShieldCheck className="size-4" />
-                    {t("nav.admin")}
+                    {t("admin")}
                   </Link>
                 </Button>
               ) : null}
               <Button type="button" variant="ghost" size="sm" className="w-full" onClick={onSignOut}>
                 <LogOut className="size-4" />
-                {t("nav.logout")}
+                {t("logout")}
               </Button>
             </div>
           </div>

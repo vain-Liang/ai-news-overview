@@ -29,7 +29,7 @@ async def trigger_retrieval(
     payload: PipelineTriggerRequest,
     _user: Annotated[User, Depends(pipeline_rate_limit("retrieve"))],
 ) -> TaskEnqueuedResponse:
-    """Manually trigger news retrieval. Chains to summarization on completion."""
+    """Manually trigger news retrieval. Successful runs automatically queue workflow summarization."""
     task = run_retrieval_task.delay(sources=payload.sources)
     return TaskEnqueuedResponse(task_id=task.id)
 
@@ -43,8 +43,8 @@ async def trigger_summarization(
     payload: SummarizationTriggerRequest,
     _user: Annotated[User, Depends(pipeline_rate_limit("summarize"))],
 ) -> TaskEnqueuedResponse:
-    """Manually trigger news summarization."""
-    task = run_summarization_task.delay(query=payload.query)
+    """Manually re-run workflow summarization from a stored retrieval snapshot."""
+    task = run_summarization_task.delay(workflow_task_id=payload.workflow_task_id, provider=payload.provider)
     return TaskEnqueuedResponse(task_id=task.id)
 
 

@@ -1,0 +1,17 @@
+export default {
+  email: "邮箱",
+  password: "密码",
+  emailPlaceholder: "you@example.com",
+  passwordPlaceholder: "请输入密码",
+  submitLogin: "登录",
+  submittingLogin: "登录中…",
+  invalidLogin: "请输入邮箱和密码后再登录。",
+  loginSuccess: "登录成功。",
+  switchToForgotPassword: "忘记密码？",
+  switchToResendVerification: "重新发送验证邮件",
+  createInstead: "还没有账号？",
+  switchToRegister: "创建账号",
+  showPassword: "显示密码",
+  hidePassword: "隐藏密码",
+  backendOffline: "无法连接后端服务。",
+};

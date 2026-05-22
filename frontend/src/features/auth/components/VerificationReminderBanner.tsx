@@ -14,7 +14,7 @@ type VerificationReminderBannerProps = {
 export const VerificationReminderBanner = ({
   email,
 }: VerificationReminderBannerProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("verificationReminderBanner");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageTone, setMessageTone] = useState<"success" | "error">(
@@ -26,13 +26,13 @@ export const VerificationReminderBanner = ({
     try {
       await requestVerificationEmail(email);
       setMessageTone("success");
-      setMessage(t("auth.resendVerificationSuccess"));
+      setMessage(t("resendSuccess"));
     } catch (error) {
       setMessageTone("error");
       setMessage(
         error instanceof Error
           ? error.message
-          : t("auth.resendVerificationError"),
+          : t("resendError"),
       );
     } finally {
       setIsSubmitting(false);
@@ -45,16 +45,11 @@ export const VerificationReminderBanner = ({
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-200">
             <AlertTriangle className="size-3.5" />
-            {t("auth.unverifiedBannerBadge")}
+            {t("badge")}
           </div>
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight text-foreground">
-              {t("auth.unverifiedBannerTitle")}
-            </h2>
-            <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
-              {t("auth.unverifiedBannerDescription", { email })}
-            </p>
-          </div>
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">
+            {t("title")}
+          </h2>
         </div>
         <div className="flex flex-wrap gap-3">
           <Button
@@ -65,22 +60,22 @@ export const VerificationReminderBanner = ({
           >
             <MailPlus />
             {isSubmitting
-              ? t("auth.submittingResendVerification")
-              : t("auth.submitResendVerification")}
+              ? t("resendPending")
+              : t("resendAction")}
           </Button>
           <Button asChild>
             <Link
               to={`/verify-account${email ? `?email=${encodeURIComponent(email)}` : ""}`}
             >
               <BadgeCheck />
-              {t("auth.goToVerifyAccount")}
+              {t("verifyAction")}
             </Link>
           </Button>
           <Button asChild variant="outline">
             <Link
               to={`/resend-verification?email=${encodeURIComponent(email)}`}
             >
-              {t("auth.openResendVerificationPage")}
+              {t("openResendPage")}
             </Link>
           </Button>
         </div>
