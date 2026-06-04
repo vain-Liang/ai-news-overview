@@ -1,7 +1,7 @@
 {
   "name": "ai-news-overview",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.13",
   "type": "module",
   "author": "vain-Liang <qiviki@outlook.com> (https://github.com/vain-Liang/)",
   "scripts": {
