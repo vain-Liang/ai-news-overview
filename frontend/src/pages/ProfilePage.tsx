@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { ArrowLeft, Mail, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Mail } from "lucide-react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 
@@ -10,7 +10,6 @@ import { useAuth } from "../features/auth/hooks/useAuth";
 import { normalizeOptionalText, sanitizeEmail } from "../features/auth/lib/auth-utils";
 import { Alert } from "../shared/ui/alert";
 import { AppShell } from "../shared/ui/app-shell";
-import { Badge } from "../shared/ui/badge";
 import { Button } from "../shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../shared/ui/card";
 import { Input } from "../shared/ui/input";

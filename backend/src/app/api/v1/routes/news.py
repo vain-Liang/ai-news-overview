@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession  # noqa: TC002
 from app.auth.fastapi_users import current_active_user
 from app.core.database import get_async_session
 from app.core.exceptions import ServiceUnavailableError
-from app.schemas.news import (  # noqa: TC001
+from app.schemas.news import (
     HomepageNewsResponse,
     HomepageNewsSourceGroup,
     NewsIngestRequest,
@@ -37,6 +37,7 @@ async def ingest_news(
         session,
         sources=payload.sources,
         bypass_cache=payload.bypass_cache,
+        index_vectors=False,
     )
     return NewsIngestResponse(**result.to_dict())
 

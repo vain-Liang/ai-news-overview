@@ -21,7 +21,7 @@ export const AppShell = ({
   return (
     <main className="min-h-screen px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
-        <header className="rounded-[2rem] border border-border/60 bg-card/80 p-4 shadow-sm backdrop-blur">
+        <header className="relative z-20 overflow-visible rounded-[2rem] border border-border/60 bg-card/80 p-4 shadow-sm backdrop-blur">
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-4">

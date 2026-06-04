@@ -7,7 +7,8 @@ from app.services.news_service import NewsIngestionResult
 def test_run_retrieval_task_queues_workflow_summary(monkeypatch) -> None:
     from app.tasks.crawl_jobs import run_retrieval_task
 
-    async def fake_ingest(*_args, **_kwargs):
+    async def fake_ingest(*_args, **kwargs):
+        captured["index_vectors"] = kwargs.get("index_vectors")
         return (
             NewsIngestionResult(
                 crawled_count=1,
@@ -64,6 +65,7 @@ def test_run_retrieval_task_queues_workflow_summary(monkeypatch) -> None:
     assert result["workflow_task_id"] == "workflow-task-1"
     assert result["workflow_summary_status"] == "queued"
     assert result["summary_task_id"] == "summary-task-1"
+    assert captured["index_vectors"] is True
     assert captured["workflow_task_id"] == "workflow-task-1"
     assert captured["summary_delay_workflow_task_id"] == "workflow-task-1"
     assert captured["stored_summary_task_id"] == "summary-task-1"

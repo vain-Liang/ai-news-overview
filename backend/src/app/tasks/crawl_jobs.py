@@ -30,7 +30,7 @@ def run_retrieval_task(self, sources: list[str] | None = None) -> dict[str, Any]
     async def _run() -> dict[str, Any]:
         workflow_task_id = self.request.id
         async with async_session_maker() as session:
-            result, articles = await ingest_homepage_news_with_articles(session, sources=sources)
+            result, articles = await ingest_homepage_news_with_articles(session, sources=sources, index_vectors=True)
             await register_workflow_news_snapshot(session, workflow_task_id=workflow_task_id, articles=articles)
 
             payload: dict[str, Any] = {

@@ -23,6 +23,9 @@ export const HomePage = () => {
             </Button>
           ) : (
             <>
+              <Button asChild>
+              <Link to="/news">{t("primaryCta")}</Link>
+              </Button>
               <Button asChild variant="outline">
                 <Link to="/login">{t("loginCta")}</Link>
               </Button>

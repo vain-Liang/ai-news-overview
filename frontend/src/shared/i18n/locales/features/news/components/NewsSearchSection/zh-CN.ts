@@ -1,8 +1,8 @@
 export default {
   badge: "语义搜索",
-  title: "按语义查找已入库内容",
+  title: "按语义检索已有新闻",
   description:
-    "输入话题、问题或事件，系统会从向量索引中返回最相关的新闻标题。",
+    "输入话题、问题或事件，检索最相关的新闻标题。",
   placeholder: "例如：AI 芯片出口管制",
   button: "搜索",
   error: "暂时无法执行搜索。",

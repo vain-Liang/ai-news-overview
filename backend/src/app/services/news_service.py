@@ -62,11 +62,14 @@ async def ingest_homepage_news_with_articles(
     sources: list[str] | None = None,
     bypass_cache: bool = True,
     persist_dir: str | None = None,
+    index_vectors: bool = True,
 ) -> tuple[NewsIngestionResult, list[NewsArticle]]:
     articles = await crawl_all_sites(sources=sources, bypass_cache=bypass_cache)
     metadata_stored_count = await upsert_news_metadata(session, articles)
-    store = _resolve_store(persist_dir)
-    vector_stored_count = ingest_articles(articles, store)
+    vector_stored_count = 0
+    if index_vectors:
+        store = _resolve_store(persist_dir)
+        vector_stored_count = ingest_articles(articles, store)
 
     by_source: dict[str, int] = {}
     for article in articles:
@@ -89,12 +92,14 @@ async def ingest_homepage_news(
     sources: list[str] | None = None,
     bypass_cache: bool = True,
     persist_dir: str | None = None,
+    index_vectors: bool = True,
 ) -> NewsIngestionResult:
     result, _articles = await ingest_homepage_news_with_articles(
         session,
         sources=sources,
         bypass_cache=bypass_cache,
         persist_dir=persist_dir,
+        index_vectors=index_vectors,
     )
     return result
 

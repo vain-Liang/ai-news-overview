@@ -2,7 +2,7 @@ export default {
   badge: "Content refresh",
   title: "Fetch fresh headlines",
   description:
-    "Select the sources you want to refresh and ingest the latest headlines into the workspace.",
+    "Select the sources you want to refresh and ingest the latest headlines.",
   sessionLoading: "Checking your session…",
   authRequiredTitle: "Sign in to fetch news",
   authRequiredDescription: "Fetching fresh headlines requires a signed-in account.",

@@ -1,15 +1,18 @@
 {
-  "name": "ai-news-review",
+  "name": "ai-news-overview",
   "private": true,
-  "version": "0.0.11",
+  "version": "0.1.1",
   "type": "module",
+  "author": "vain-Liang <qiviki@outlook.com> (https://github.com/vain-Liang/)",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint src",
     "preview": "vite preview",
     "test": "node --test --experimental-strip-types --experimental-specifier-resolution=node tests/**/*.test.ts",
-    "test:e2e": "./scripts/run-e2e.sh"
+    "test:e2e": "./scripts/run-e2e.sh",
+    "clean": "rimraf node_modules",
+    "clean:dist": "rimraf dist"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.11",

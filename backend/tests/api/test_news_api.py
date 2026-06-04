@@ -55,11 +55,14 @@ async def test_ingest_news_endpoint_requires_auth(client) -> None:
 
 
 async def test_ingest_news_endpoint(client, monkeypatch) -> None:
-    async def fake_ingest(*_args, **_kwargs) -> NewsIngestionResult:
+    received: dict = {}
+
+    async def fake_ingest(*_args, **kwargs) -> NewsIngestionResult:
+        received.update(kwargs)
         return NewsIngestionResult(
             crawled_count=5,
             metadata_stored_count=5,
-            vector_stored_count=5,
+            vector_stored_count=0,
             by_source={"xinhua": 2, "ifeng": 3},
         )
 
@@ -73,10 +76,11 @@ async def test_ingest_news_endpoint(client, monkeypatch) -> None:
     )
 
     assert response.status_code == 200
+    assert received["index_vectors"] is False
     assert response.json() == {
         "crawled_count": 5,
         "metadata_stored_count": 5,
-        "vector_stored_count": 5,
+        "vector_stored_count": 0,
         "by_source": {"xinhua": 2, "ifeng": 3},
     }
 

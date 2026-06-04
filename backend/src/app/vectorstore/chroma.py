@@ -56,7 +56,7 @@ def _build_embedding_function() -> OpenAIEmbeddingFunction | None:
     from app.core.config import get_settings
 
     s = get_settings()
-    if not s.embedding_model_name in ["text-embedding-ada-002", "text-embedding-3-small", "text-embedding-3-large"]:
+    if s.embedding_model_name not in ["text-embedding-ada-002", "text-embedding-3-small", "text-embedding-3-large"]:
         return None
     elif not s.embedding_api_key:
         return None

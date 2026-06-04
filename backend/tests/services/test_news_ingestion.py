@@ -80,7 +80,45 @@ async def test_ingest_homepage_news_upserts_existing_metadata(monkeypatch, tmp_p
         await ingest_homepage_news(session, persist_dir=str(tmp_path))
 
 
-async def test_semantic_search_with_topics_filter(monkeypatch, tmp_path) -> None:
+async def test_ingest_homepage_news_can_skip_vector_indexing(monkeypatch, tmp_path) -> None:
+    articles = [
+        NewsArticle(
+            id="manual-news-1",
+            url="https://www.news.cn/manual/1.htm",
+            source="xinhua",
+            title="手动抓取新闻只保存元数据",
+            summary="向量索引应由后台任务处理。",
+            author="新华社",
+            published_at="2026-04-19 11:00",
+            crawled_at="2026-04-19T11:30:00+00:00",
+        )
+    ]
+
+    async def fake_crawl_all_sites(*_args, **_kwargs) -> list[NewsArticle]:
+        return articles
+
+    def fail_resolve_store(*_args, **_kwargs):
+        raise AssertionError("manual ingestion should not initialize the vector store")
+
+    monkeypatch.setattr("app.services.news_service.crawl_all_sites", fake_crawl_all_sites)
+    monkeypatch.setattr("app.services.news_service._resolve_store", fail_resolve_store)
+
+    from app.core.database import async_session_maker
+
+    async with async_session_maker() as session:
+        result = await ingest_homepage_news(session, persist_dir=str(tmp_path), index_vectors=False)
+        assert result.crawled_count == 1
+        assert result.metadata_stored_count == 1
+        assert result.vector_stored_count == 0
+        assert result.by_source == {"xinhua": 1}
+
+    async with async_session_maker() as session:
+        record = await session.get(NewsArticleRecord, "manual-news-1")
+        assert record is not None
+        assert record.title == "手动抓取新闻只保存元数据"
+
+
+async def test_semantic_search_with_topics_filter(monkeypatch) -> None:
     """Verify that topic filtering routes through to the vector store correctly.
 
     Uses a fake store to avoid calling the embedding API, while still exercising
