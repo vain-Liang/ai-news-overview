@@ -2,7 +2,7 @@
 
 
 # Introduction
-A news review system based AI(LLMs). Backend is built with LangChain, FastAPI, and frontend is built with React.
+A news overview system based AI(LLMs). Backend is built with LangChain, FastAPI, and frontend is built with React.
 
 - `ai-news-review` is an AI-powered news summary system. 
 

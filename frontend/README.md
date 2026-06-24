@@ -1,6 +1,6 @@
 # Frontend
 
-React + Vite frontend for the AI News Review authentication flow.
+React + Vite frontend for the AI News Overview authentication flow.
 
 ## Stack
 
